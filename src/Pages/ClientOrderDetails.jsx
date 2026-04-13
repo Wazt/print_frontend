@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { motion, AnimatePresence } from "framer-motion";
-import { Check, Upload, Search, Printer, Truck, FileText, CheckCircle2, ArrowRight, ExternalLink, ChevronRight } from "lucide-react";
+import { Check, Upload, Search, Printer, Truck, FileText, CheckCircle2, ArrowRight, ExternalLink, Bell } from "lucide-react";
 
 const STEPS = (t) => [
   { key: "upload", label: t("orderTracking.step1"), icon: Upload },
@@ -13,84 +13,105 @@ const STEPS = (t) => [
   { key: "finished", label: t("orderTracking.step7"), icon: CheckCircle2 },
 ];
 
-function StatusPill({ step }) {
-  const colors = [
-    "bg-[var(--gold-bg)] text-[var(--gold)]",
-    "bg-indigo-50 text-indigo-700",
-    "bg-indigo-50 text-indigo-700",
-    "bg-orange-50 text-orange-700",
-    "bg-purple-50 text-purple-800",
-    "bg-[var(--teal-light)] text-[var(--teal)]",
-    "bg-[var(--ink)] text-white",
+function StatusPill({ step, label }) {
+  const styles = [
+    { bg: "var(--ob-orl)", color: "var(--ob-or)" },
+    { bg: "var(--ob-pl)", color: "var(--ob-p)" },
+    { bg: "var(--ob-pl)", color: "var(--ob-p)" },
+    { bg: "var(--step-active-bg)", color: "var(--step-active)" },
+    { bg: "var(--ob-pl)", color: "var(--ob-p)" },
+    { bg: "var(--ob-grnl)", color: "var(--ob-grn)" },
+    { bg: "var(--ob-grnl)", color: "var(--ob-grn)" },
   ];
-  const dots = [
-    "bg-[var(--gold)]",
-    "bg-indigo-700",
-    "bg-indigo-700",
-    "bg-orange-700",
-    "bg-purple-800",
-    "bg-[var(--teal)]",
-    "bg-[var(--gold-light)]",
-  ];
+  const s = styles[step] || styles[0];
   return (
-    <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium ${colors[step]}`}>
-      <span className={`w-1.5 h-1.5 rounded-full ${dots[step]}`} />
-      {STEPS(() => "")[step]?.label || ""}
+    <span
+      className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-[12px] font-medium whitespace-nowrap"
+      style={{ background: s.bg, color: s.color }}
+    >
+      <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: s.color }} />
+      {label || ""}
     </span>
   );
 }
 
 function Stepper({ current, steps }) {
+  const [lineWidth, setLineWidth] = useState(0);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      const pct = (current / (steps.length - 1)) * 100;
+      setLineWidth(pct);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [current, steps.length]);
+
   return (
-    <div className="flex items-start px-6 pt-6">
-      {steps.map((step, i) => (
-        <div key={step.key} className="flex-1 flex flex-col items-center relative cursor-pointer">
-          {i < steps.length - 1 && (
+    <div className="relative flex justify-between px-1 py-6">
+      {/* Track lines */}
+      <div className="absolute top-[43px] left-0 right-0 h-[2px] z-0">
+        <div
+          className="absolute h-[2px] rounded-[1px] bg-[var(--step-pending-bg)]"
+          style={{ left: "calc(100% / 14)", right: "calc(100% / 14)" }}
+        />
+        <div
+          className="absolute h-[2px] rounded-[1px] transition-[width] duration-[800ms] ease-[cubic-bezier(0.4,0,0.2,1)]"
+          style={{
+            left: "calc(100% / 14)",
+            width: `${lineWidth * (6 / 7)}%`,
+            background: "linear-gradient(90deg, var(--step-done-line), var(--step-active-line))",
+          }}
+        />
+      </div>
+
+      {steps.map((step, i) => {
+        const isDone = i < current;
+        const isActive = i === current;
+
+        return (
+          <div key={step.key} className="flex-1 flex flex-col items-center relative z-[1] min-w-0">
             <div
-              className={`absolute top-3.5 left-1/2 right-[-50%] h-0.5 z-0 transition-colors duration-300 ${
-                i < current ? "bg-[var(--teal)]" : i === current ? "bg-gradient-to-r from-[var(--teal)] to-gray-200" : "bg-gray-200"
+              className={`w-[38px] h-[38px] rounded-full flex items-center justify-center text-[13px] font-medium transition-all duration-[400ms] ease-[cubic-bezier(0.4,0,0.2,1)] ${
+                isDone
+                  ? "bg-[var(--step-done)] text-white"
+                  : isActive
+                  ? "bg-[var(--step-active)] text-white shadow-[0_0_0_5px_var(--step-active-bg)]"
+                  : "bg-[var(--step-pending-bg)] text-[var(--step-pending)] border-[1.5px] border-[var(--step-pending)]"
               }`}
-            />
-          )}
-          <div
-            className={`w-7 h-7 rounded-full z-10 flex items-center justify-center text-[11px] font-semibold border-2 transition-all duration-300 ${
-              i < current
-                ? "bg-[var(--teal)] border-[var(--teal)] text-white"
-                : i === current
-                ? "bg-[var(--ink)] border-[var(--ink)] text-white shadow-[0_0_0_4px_rgba(13,21,35,0.08)]"
-                : "bg-white border-gray-200 text-[var(--text-3)]"
-            }`}
-          >
-            {i < current ? <Check size={12} /> : i + 1}
+            >
+              {isDone ? <Check size={17} strokeWidth={2.5} /> : i + 1}
+            </div>
+            <span
+              className={`mt-[10px] text-[11.5px] text-center leading-tight max-w-[74px] ${
+                isDone
+                  ? "text-[var(--step-done)] font-medium"
+                  : isActive
+                  ? "text-[var(--step-active)] font-medium"
+                  : "text-[var(--ob-txd)] font-normal"
+              }`}
+            >
+              {step.label}
+            </span>
           </div>
-          <span
-            className={`mt-2 text-[11px] font-medium text-center leading-tight max-w-[70px] ${
-              i < current ? "text-[var(--teal)]" : i === current ? "text-[var(--ink)] font-semibold" : "text-[var(--text-3)]"
-            }`}
-          >
-            {step.label}
-          </span>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }
 
 function InfoGrid({ order, t }) {
   return (
-    <div className="grid grid-cols-3 gap-2.5 mb-4">
-      <div className="bg-[var(--paper)] rounded-lg py-2.5 px-3.5">
-        <div className="text-[11px] text-[var(--text-3)] mb-0.5">{t("orderTracking.product")}</div>
-        <div className="text-sm font-medium text-[var(--ink)]">{order.productName}</div>
-      </div>
-      <div className="bg-[var(--paper)] rounded-lg py-2.5 px-3.5">
-        <div className="text-[11px] text-[var(--text-3)] mb-0.5">{t("orderTracking.quantity")}</div>
-        <div className="text-sm font-medium text-[var(--ink)]">{order.quantity}</div>
-      </div>
-      <div className="bg-[var(--paper)] rounded-lg py-2.5 px-3.5">
-        <div className="text-[11px] text-[var(--text-3)] mb-0.5">{t("orderTracking.format")}</div>
-        <div className="text-sm font-medium text-[var(--ink)]">{order.format}</div>
-      </div>
+    <div className="grid grid-cols-3 gap-4 mb-6">
+      {[
+        { label: t("orderTracking.product"), value: order.productName },
+        { label: t("orderTracking.quantity"), value: order.quantity },
+        { label: t("orderTracking.format"), value: order.format },
+      ].map((item) => (
+        <div key={item.label}>
+          <div className="text-[11px] uppercase tracking-[0.06em] text-[var(--ob-txd)] mb-1">{item.label}</div>
+          <div className="text-[14px] font-medium text-[var(--ob-tx)]">{item.value}</div>
+        </div>
+      ))}
     </div>
   );
 }
@@ -265,44 +286,74 @@ function PanelProduction({ t }) {
   ];
   return (
     <div>
-      <h3 className="font-['Syne'] text-[15px] font-semibold text-[var(--ink)] mb-1">{t("orderTracking.prodTitle")}</h3>
-      <p className="text-[13px] text-[var(--text-2)] leading-relaxed mb-4">{t("orderTracking.prodDesc")}</p>
+      <h3 className="font-['Syne'] text-[15px] font-semibold text-[var(--ob-tx)] mb-1">{t("orderTracking.prodTitle")}</h3>
+      <p className="text-[13px] text-[var(--ob-txm)] leading-relaxed mb-4">{t("orderTracking.prodDesc")}</p>
 
-      <div className="bg-[var(--paper-2)] rounded-xl p-5 mb-3.5">
-        <div className="flex mb-3.5">
+      <div className="bg-[var(--ob-surf2)] border border-[var(--ob-brd)] rounded-xl p-5 mb-4">
+        {/* Sub-stepper title */}
+        <div className="text-[13px] font-medium text-[var(--ob-txm)] mb-4 flex items-center gap-2">
+          <Printer size={15} /> {t("lang") === "fr" ? "Avancement production" : "Production progress"}
+        </div>
+
+        {/* Dot sub-stepper */}
+        <div className="flex items-center px-2.5">
           {prodSteps.map((s, i) => (
-            <div key={s.key} className="flex-1 text-center relative">
+            <div key={s.key} className="flex items-center flex-1 last:flex-none">
+              <div
+                className={`w-3 h-3 rounded-full flex-shrink-0 transition-all duration-[400ms] ${
+                  s.status === "done"
+                    ? "bg-[var(--step-done)]"
+                    : s.status === "active"
+                    ? "bg-[var(--step-active)] shadow-[0_0_0_4px_var(--step-active-bg)]"
+                    : "bg-[var(--step-pending-bg)] border-[1.5px] border-[var(--step-pending)]"
+                }`}
+              />
               {i < prodSteps.length - 1 && (
-                <div className={`absolute top-3 left-1/2 w-full h-0.5 z-0 ${
-                  s.status === "done" ? "bg-[var(--teal)]" : s.status === "active" ? "bg-gradient-to-r from-[var(--teal)] to-gray-200" : "bg-gray-200"
-                }`} />
+                <div
+                  className={`flex-1 h-[2px] rounded-[1px] mx-1 ${
+                    s.status === "done"
+                      ? "bg-[var(--step-done-line)]"
+                      : s.status === "active"
+                      ? "bg-gradient-to-r from-[var(--step-active-line)] to-[var(--step-pending-bg)]"
+                      : "bg-[var(--step-pending-bg)]"
+                  }`}
+                />
               )}
-              <div className={`w-6.5 h-6.5 rounded-full mx-auto mb-1.5 relative z-10 flex items-center justify-center text-[10px] border-2 transition-all ${
-                s.status === "done"
-                  ? "bg-[var(--teal)] border-[var(--teal)] text-white"
-                  : s.status === "active"
-                  ? "bg-[var(--ink)] border-[var(--ink)] text-white animate-pulse"
-                  : "bg-white border-gray-200 text-[var(--text-3)]"
-              }`}>
-                {s.status === "done" ? <Check size={10} /> : s.status === "active" ? "▶" : i + 1}
-              </div>
-              <div className={`text-[11px] ${
-                s.status === "done" ? "text-[var(--teal)]" : s.status === "active" ? "text-[var(--ink)] font-semibold" : "text-[var(--text-3)]"
-              }`}>
-                {t(`orderTracking.${s.key}`)}
-              </div>
             </div>
           ))}
         </div>
-        <div className="flex items-center justify-between p-2.5 px-3.5 bg-white border border-gray-100 rounded-lg">
-          <span className="text-xs text-[var(--text-3)]">{t("orderTracking.prodEta")}</span>
-          <span className="font-['Syne'] text-sm font-semibold text-[var(--ink)]">Mardi 19 mars 2026</span>
+        <div className="flex justify-between mt-2.5 px-1">
+          {prodSteps.map((s) => (
+            <div
+              key={s.key}
+              className={`text-[11px] text-center flex-1 last:flex-none last:min-w-[52px] ${
+                s.status === "done"
+                  ? "text-[var(--step-done)]"
+                  : s.status === "active"
+                  ? "text-[var(--step-active)] font-medium"
+                  : "text-[var(--ob-txd)]"
+              }`}
+            >
+              {t(`orderTracking.${s.key}`)}
+            </div>
+          ))}
         </div>
-      </div>
 
-      <div className="flex gap-2.5 items-start bg-[var(--pf-blue-light)] border border-[var(--pf-blue)]/20 rounded-lg p-3 text-xs text-blue-900 leading-relaxed">
-        <span>📬</span>
-        <span>{t("orderTracking.prodNotify")}</span>
+        {/* Delivery bar */}
+        <div className="flex items-center justify-between mt-6 p-3 px-4 rounded-lg bg-[var(--step-active-bg)] flex-wrap gap-2">
+          <div className="flex items-center gap-1.5 text-[12px] text-[var(--step-active)]">
+            <Truck size={15} /> {t("orderTracking.prodEta")}
+          </div>
+          <div className="text-[15px] font-medium text-[var(--step-active)] font-['Fraunces']">
+            Mardi 19 mars 2026
+          </div>
+        </div>
+
+        {/* Notification */}
+        <div className="flex items-center gap-2.5 mt-3 p-3 px-4 rounded-lg border border-[var(--ob-brd)] bg-[var(--ob-surf)] text-[12px] text-[var(--ob-txm)] leading-relaxed">
+          <Bell size={16} className="text-[var(--ob-txd)] flex-shrink-0" />
+          <span>{t("orderTracking.prodNotify")}</span>
+        </div>
       </div>
     </div>
   );
@@ -472,21 +523,65 @@ export default function ClientOrderDetails({ order }) {
   const Panel = PANELS[currentStep];
 
   return (
-    <div className="max-w-[960px]">
+    <div className="max-w-[720px]">
       {/* Page header */}
-      <div className="mb-7">
-        <h1 className="font-['Syne'] text-2xl font-bold text-[var(--ink)] mb-1">{t("orders.myOrders")}</h1>
-        <p className="text-sm text-[var(--text-3)]">{t("orders.trackSubtitle")}</p>
-      </div>
+      <motion.div
+        className="mb-7 flex items-start justify-between flex-wrap gap-3"
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.05 }}
+      >
+        <div>
+          <div className="text-[13px] text-[var(--ob-txd)] tracking-wide">{demoOrder.id}</div>
+          <h1 className="font-['Fraunces'] text-[22px] font-medium text-[var(--ob-tx)] mt-1">{demoOrder.title}</h1>
+        </div>
+        <StatusPill step={currentStep} label={steps[currentStep]?.label} />
+      </motion.div>
 
-      {/* Step nav bar */}
-      <div className="flex gap-1 flex-wrap bg-[var(--paper)] rounded-xl p-1 mb-5">
+      {/* Main stepper */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.15 }}
+        className="mb-8"
+      >
+        <Stepper current={currentStep} steps={steps} />
+      </motion.div>
+
+      {/* Detail card */}
+      <motion.div
+        className="bg-[var(--card)] border border-[var(--ob-brd)] rounded-xl p-6"
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.25 }}
+      >
+        {/* Info grid */}
+        <InfoGrid order={demoOrder} t={t} />
+
+        {/* Panel content */}
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={currentStep}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.25 }}
+          >
+            <Panel t={t} onValidate={() => setCurrentStep(3)} />
+          </motion.div>
+        </AnimatePresence>
+      </motion.div>
+
+      {/* Step nav bar (below card) */}
+      <div className="flex gap-1 flex-wrap bg-[var(--ob-surf2)] rounded-xl p-1 mt-5">
         {steps.map((step, i) => (
           <button
             key={step.key}
             onClick={() => setCurrentStep(i)}
-            className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all ${
-              i === currentStep ? "bg-[var(--ink)] text-white" : "text-[var(--text-3)] hover:bg-white/70 hover:text-[var(--ink)]"
+            className={`px-3 py-1.5 rounded-lg text-[11px] font-medium whitespace-nowrap transition-all ${
+              i === currentStep
+                ? "bg-[var(--step-active)] text-white"
+                : "text-[var(--ob-txd)] hover:bg-[var(--ob-surf3)] hover:text-[var(--ob-tx)]"
             }`}
           >
             {i + 1}. {step.label}
@@ -494,53 +589,22 @@ export default function ClientOrderDetails({ order }) {
         ))}
       </div>
 
-      {/* Order card */}
-      <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-[0_1px_3px_rgba(13,21,35,0.04)] mb-5">
-        {/* Header */}
-        <div className="px-6 py-4 border-b border-gray-100 flex items-center gap-4">
-          <div className="flex-1">
-            <div className="font-['Syne'] text-[13px] font-bold text-[var(--text-3)] tracking-wide">{demoOrder.id}</div>
-            <div className="font-['Syne'] text-base font-semibold text-[var(--ink)]">{demoOrder.title}</div>
-          </div>
-          <StatusPill step={currentStep} />
-        </div>
-
-        {/* Stepper */}
-        <Stepper current={currentStep} steps={steps} />
-
-        {/* Panel content */}
-        <div className="px-6 pb-6 mt-6">
-          <InfoGrid order={demoOrder} t={t} />
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={currentStep}
-              initial={{ opacity: 0, y: 6 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -6 }}
-              transition={{ duration: 0.2 }}
-            >
-              <Panel t={t} onValidate={() => setCurrentStep(3)} />
-            </motion.div>
-          </AnimatePresence>
-        </div>
-      </div>
-
       {/* Other orders */}
-      <div className="mt-6">
-        <h3 className="font-['Syne'] text-[13px] font-semibold text-[var(--ink)] mb-3.5">{t("orders.otherOrders")}</h3>
+      <div className="mt-8">
+        <h3 className="font-['Syne'] text-[13px] font-semibold text-[var(--ob-tx)] mb-3.5">{t("orders.otherOrders")}</h3>
         {[
           { icon: "🖨", name: "Flyers A5 – Lab Perfect", meta: "#CMD-2026-0046 · 1000 ex.", status: 1 },
           { icon: "🗂", name: "Plaquette A3 – Saba Phone", meta: "#CMD-2026-0044 · 200 ex.", status: 5 },
         ].map((o, i) => (
-          <div key={i} className="flex items-center gap-2.5 p-3 px-4 rounded-xl border border-gray-100 bg-white mb-2 cursor-pointer hover:border-gray-200 hover:shadow-sm transition-all">
-            <div className="w-9 h-9 bg-[var(--paper-2)] rounded-lg flex items-center justify-center text-base flex-shrink-0">
+          <div key={i} className="flex items-center gap-2.5 p-3 px-4 rounded-xl border border-[var(--ob-brd)] bg-[var(--ob-surf)] mb-2 cursor-pointer hover:border-[var(--ob-brd2)] hover:shadow-sm transition-all">
+            <div className="w-9 h-9 bg-[var(--ob-surf2)] rounded-lg flex items-center justify-center text-base flex-shrink-0">
               {o.icon}
             </div>
             <div className="flex-1 min-w-0">
-              <div className="text-[13px] font-medium text-[var(--ink)] truncate">{o.name}</div>
-              <div className="text-[11px] text-[var(--text-3)]">{o.meta}</div>
+              <div className="text-[13px] font-medium text-[var(--ob-tx)] truncate">{o.name}</div>
+              <div className="text-[11px] text-[var(--ob-txd)]">{o.meta}</div>
             </div>
-            <StatusPill step={o.status} />
+            <StatusPill step={o.status} label={steps[o.status]?.label} />
           </div>
         ))}
       </div>

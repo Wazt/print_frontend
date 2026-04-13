@@ -8,10 +8,10 @@
   --radius: 0.625rem;
 
   /* Adaptive palette — light values */
-  --ob-bg: #F4F5FA;
+  --ob-bg: #F9FAFB;
   --ob-surf: #FFFFFF;
-  --ob-surf2: #F0F1F8;
-  --ob-surf3: #E4E6F0;
+  --ob-surf2: #F3F4F6;
+  --ob-surf3: #E5E7EB;
   --ob-brd: rgba(0,0,0,0.08);
   --ob-brd2: rgba(0,0,0,0.13);
   --ob-brd3: rgba(0,0,0,0.2);
@@ -26,10 +26,20 @@
   --ob-grnl: rgba(43,175,106,0.08);
   --ob-red: #D04040;
   --ob-redl: rgba(208,64,64,0.08);
-  --ob-tx: #1A1D2E;
-  --ob-txm: #4A4D6A;
-  --ob-txd: #8A8DA8;
-  --ob-txdd: #B8BAC8;
+  --ob-tx: #111827;
+  --ob-txm: #374151;
+  --ob-txd: #6B7280;
+  --ob-txdd: #9CA3AF;
+
+  /* Stepper palette */
+  --step-done: #0F6E56;
+  --step-done-bg: #E1F5EE;
+  --step-done-line: #9FE1CB;
+  --step-active: #185FA5;
+  --step-active-bg: #E6F1FB;
+  --step-active-line: #85B7EB;
+  --step-pending: #B4B2A9;
+  --step-pending-bg: #F1EFE8;
 
   /* Print-shop palette (client order view) */
   --ink: #0D1523;
@@ -51,8 +61,8 @@
   --text-3: #8896A8;
 
   /* shadcn semantic — light */
-  --background: #F4F5FA;
-  --foreground: #1A1D2E;
+  --background: #F9FAFB;
+  --foreground: #111827;
   --card: #FFFFFF;
   --card-foreground: #1A1D2E;
   --popover: #FFFFFF;
@@ -86,6 +96,15 @@
 
 /* ═══════════ DARK THEME (Obsidian GT) ═══════════ */
 .dark {
+  --step-done: #5DCAA5;
+  --step-done-bg: #08342C;
+  --step-done-line: #085041;
+  --step-active: #85B7EB;
+  --step-active-bg: #042C53;
+  --step-active-line: #0C447C;
+  --step-pending: #5F5E5A;
+  --step-pending-bg: #2C2C2A;
+
   --ob-bg: #080B14;
   --ob-surf: #0E1121;
   --ob-surf2: #131728;
