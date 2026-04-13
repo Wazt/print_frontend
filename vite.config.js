@@ -6,6 +6,12 @@ import path from 'path'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react(),tailwindcss(),],
+  test: {
+    globals: true,
+    environment: 'jsdom',
+    setupFiles: './src/test/setup.js',
+    css: false,
+  },
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),

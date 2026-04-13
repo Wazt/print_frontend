@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { toast } from "sonner";
 import { Button } from "@/Components/ui/button";
 import { Card, CardContent } from "@/Components/ui/card";
 import { Input } from "@/Components/ui/input";
@@ -76,9 +77,13 @@ function ProductDetailPage() {
   /* ================= ACTIONS ================= */
 
   const handleUpdate = async () => {
-    const updated = await updateProduct(product.id, formData);
-    setProduct(updated);
-    setIsEditOpen(false);
+    try {
+      const updated = await updateProduct(product.id, formData);
+      setProduct(updated);
+      setIsEditOpen(false);
+    } catch {
+      toast.error("Failed to update product");
+    }
   };
 
   const handleDelete = async () => {

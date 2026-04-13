@@ -1,10 +1,8 @@
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/Components/ui/card";
 import { Skeleton } from "@/Components/ui/skeleton";
-import { 
-  Activity, 
-  ShoppingCart, 
-  ArrowUpRight, 
-  CheckCircle, 
+import {
+  Activity,
+  ShoppingCart,
+  CheckCircle,
   Clock,
   Receipt,
   DollarSign,
@@ -13,479 +11,227 @@ import {
   CreditCard,
 } from "lucide-react";
 import React, { useEffect, useState } from "react";
-import { Badge } from "@/Components/ui/badge";
 import { get_order_analytics } from "@/Services/AnalyticsService";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { toast } from "sonner";
 
 function Home() {
   const [stats, setStats] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
-
-  const getOrdersStatistics = async () => {
-    setIsLoading(true);
-    try {
-      const response = await get_order_analytics();
-      setStats(response);
-    } catch (error) {
-      console.error("Failed to fetch dashboard stats:", error);
-      toast.error("Failed to load statistics");
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const { t } = useLanguage();
 
   useEffect(() => {
-    getOrdersStatistics();
+    (async () => {
+      setIsLoading(true);
+      try {
+        const response = await get_order_analytics();
+        setStats(response);
+      } catch {
+        toast.error("Failed to load statistics");
+      } finally {
+        setIsLoading(false);
+      }
+    })();
   }, []);
 
-  const MetricCard = ({ title, value, subtitle, icon: Icon, color, bgColor }) => (
-    <Card className="group hover:shadow-md transition-all duration-200 border-slate-200 bg-white">
-      <CardContent className="p-6">
-        <div className="flex items-center justify-between">
-          <div className="space-y-2">
-            <p className="text-sm font-medium text-slate-600">{title}</p>
-            {isLoading ? (
-              <Skeleton className="h-9 w-24 rounded-md" />
-            ) : (
-              <h3 className="text-3xl font-bold text-slate-900 tracking-tight">
-                {value ?? "—"}
-              </h3>
-            )}
-            {subtitle && (
-              <p className="text-xs text-slate-500">{subtitle}</p>
-            )}
-          </div>
-          <div className={`p-3 rounded-xl ${bgColor}`}>
-            <Icon className={`w-6 h-6 ${color}`} strokeWidth={2} />
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
-
-  // Calculate percentages for invoice status
-  const totalInvoices = stats?.facture_stats 
+  const totalInvoices = stats?.facture_stats
     ? Object.values(stats.facture_stats).reduce((sum, val) => sum + val, 0)
     : 0;
 
-  const getInvoicePercentage = (value) => {
-    if (!totalInvoices) return 0;
-    return Math.round((value / totalInvoices) * 100);
-  };
+  const pct = (val, total) => (total ? Math.round((val / total) * 100) : 0);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100/50 p-4 sm:p-6 lg:p-8">
-      <div className="max-w-7xl mx-auto space-y-8">
-        {/* Header Section */}
-        <div className="space-y-2">
-          <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-slate-900">
-            Dashboard
-          </h1>
-          <p className="text-slate-600 text-base">
-            {isLoading
-              ? "Loading your business insights..."
-              : "Overview of your business performance and key metrics"}
-          </p>
+    <div className="space-y-5 page-in">
+      {/* Header */}
+      <div>
+        <h1 className="font-['Syne'] text-[22px] md:text-[26px] font-bold text-[var(--ob-tx)]">
+          {t("dashboard.title")}
+        </h1>
+        <p className="text-[13px] text-[var(--ob-txd)] mt-1">
+          {t("dashboard.subtitle")}
+        </p>
+      </div>
+
+      {/* KPI Row */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-[10px]">
+        {[
+          { label: t("dashboard.totalOrders"), val: stats?.order_stats?.total_orders, sub: t("dashboard.allTime"), subCls: "", icon: ShoppingCart, accent: "var(--ob-pl)" },
+          { label: t("dashboard.recentOrders"), val: stats?.order_stats?.recent_created, sub: t("dashboard.createdRecently"), subCls: "warn", icon: Clock, accent: "var(--ob-tll)" },
+          { label: t("dashboard.completedOrders"), val: stats?.order_stats?.total_finished, sub: `${pct(stats?.order_stats?.total_finished, stats?.order_stats?.total_orders)}% completed`, subCls: "up", icon: CheckCircle, accent: "var(--ob-orl)" },
+          { label: t("dashboard.acceptedOrders"), val: stats?.order_stats?.total_accepted, sub: `${pct(stats?.order_stats?.total_accepted, stats?.order_stats?.total_orders)}% accepted`, subCls: "up", icon: Package, accent: "var(--ob-grnl)" },
+        ].map((kpi, i) => (
+          <div
+            key={i}
+            className="relative overflow-hidden rounded-[13px] border border-[var(--ob-brd)] p-[12px_14px] cursor-default transition-all duration-200 hover:border-[var(--ob-brd2)] hover:-translate-y-[1px]"
+            style={{ background: "var(--card)" }}
+          >
+            <div className="absolute top-0 right-0 w-[45px] h-[45px] rounded-[0_13px_0_45px] opacity-45" style={{ background: kpi.accent }} />
+            <div className="text-[9px] font-bold uppercase tracking-[0.7px] text-[var(--ob-txd)] mb-[5px]">{kpi.label}</div>
+            {isLoading ? (
+              <Skeleton className="h-8 w-16 rounded bg-[var(--ob-surf3)]" />
+            ) : (
+              <div className="font-['Syne'] text-[24px] font-bold text-[var(--ob-tx)] leading-none">{kpi.val ?? "—"}</div>
+            )}
+            <div className={`text-[9.5px] mt-1 ${
+              kpi.subCls === "up" ? "text-[var(--ob-grn)]" : kpi.subCls === "warn" ? "text-[var(--ob-or)]" : "text-[var(--ob-txd)]"
+            }`}>{kpi.sub}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Charts Row */}
+      <div className="grid gap-[10px] lg:grid-cols-2">
+        {/* Order Overview */}
+        <div className="rounded-[13px] border border-[var(--ob-brd)] p-[14px] overflow-hidden" style={{ background: "var(--card)" }}>
+          <div className="flex items-center justify-between mb-3">
+            <div>
+              <div className="font-['Syne'] text-[13px] font-semibold text-[var(--ob-tx)]">
+                {t("lang") === "fr" ? "Apercu commandes" : "Order Overview"}
+              </div>
+              <div className="text-[10px] text-[var(--ob-txd)] mt-[2px]">
+                {t("lang") === "fr" ? "Distribution par statut" : "Distribution of order statuses"}
+              </div>
+            </div>
+            <div className="w-[34px] h-[34px] rounded-[10px] border border-[var(--ob-brd)] bg-[var(--ob-surf2)] flex items-center justify-center">
+              <Activity size={15} className="text-[var(--ob-p2)]" />
+            </div>
+          </div>
+
+          {isLoading ? (
+            <div className="space-y-3">
+              <Skeleton className="h-10 w-full rounded bg-[var(--ob-surf3)]" />
+              <Skeleton className="h-10 w-full rounded bg-[var(--ob-surf3)]" />
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {[
+                { label: "Total", val: stats?.order_stats?.total_orders || 0, pctVal: 100, from: "var(--ob-p)", to: "#9B7DC8" },
+                { label: t("orders.accepted"), val: stats?.order_stats?.total_accepted || 0, pctVal: pct(stats?.order_stats?.total_accepted, stats?.order_stats?.total_orders), from: "var(--ob-tl)", to: "#2EDCC8" },
+                { label: t("orders.pending"), val: stats?.order_stats?.recent_created || 0, pctVal: pct(stats?.order_stats?.recent_created, stats?.order_stats?.total_orders), from: "var(--ob-or)", to: "#FF8055" },
+                { label: t("orders.completed"), val: stats?.order_stats?.total_finished || 0, pctVal: pct(stats?.order_stats?.total_finished, stats?.order_stats?.total_orders), from: "var(--ob-grn)", to: "#6AEDB5" },
+              ].map((row, i) => (
+                <div key={i} className="space-y-[5px]">
+                  <div className="flex items-center justify-between text-[11.5px]">
+                    <div className="flex items-center gap-2">
+                      <div className="h-[10px] w-[10px] rounded-full" style={{ background: row.from }} />
+                      <span className="font-medium text-[var(--ob-txm)]">{row.label}</span>
+                    </div>
+                    <span className="font-semibold text-[var(--ob-tx)]">{row.val}</span>
+                  </div>
+                  <div className="h-[5px] bg-[var(--ob-surf3)] rounded-full overflow-hidden">
+                    <div
+                      className="h-full rounded-full transition-all duration-500"
+                      style={{ width: `${row.pctVal}%`, background: `linear-gradient(90deg, ${row.from}, ${row.to})` }}
+                    />
+                  </div>
+                  {i > 0 && (
+                    <p className="text-[9px] text-[var(--ob-txd)] text-right">{row.pctVal}% of total</p>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
-        {/* Order Statistics - 4 Cards */}
-        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-          <MetricCard 
-            title="Total Orders" 
-            value={stats?.order_stats?.total_orders ?? "—"} 
-            subtitle="All time orders"
-            icon={ShoppingCart} 
-            color="text-blue-600"
-            bgColor="bg-blue-50"
-          />
-          <MetricCard 
-            title="Recent Orders" 
-            value={stats?.order_stats?.recent_created ?? "—"} 
-            subtitle="Created recently"
-            icon={Clock} 
-            color="text-amber-600"
-            bgColor="bg-amber-50"
-          />
-          <MetricCard 
-            title="Completed Orders" 
-            value={stats?.order_stats?.total_finished ?? "—"} 
-            subtitle="Successfully finished"
-            icon={CheckCircle} 
-            color="text-green-600"
-            bgColor="bg-green-50"
-          />
-          <MetricCard 
-            title="Accepted Orders" 
-            value={stats?.order_stats?.total_accepted ?? "—"} 
-            subtitle="Approved & processing"
-            icon={Package} 
-            color="text-purple-600"
-            bgColor="bg-purple-50"
-          />
-        </div>
-
-        {/* Charts Row */}
-        <div className="grid gap-6 lg:grid-cols-2">
-          {/* Order Status Distribution */}
-          <Card className="border-slate-200 shadow-sm">
-            <CardHeader className="pb-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="text-xl font-semibold text-slate-900">Order Overview</CardTitle>
-                  <CardDescription className="text-slate-600 mt-1">
-                    Distribution of order statuses
-                  </CardDescription>
-                </div>
-                <div className="h-10 w-10 rounded-lg bg-blue-50 flex items-center justify-center">
-                  <Activity size={20} className="text-blue-600" />
-                </div>
+        {/* Invoice Status */}
+        <div className="rounded-[13px] border border-[var(--ob-brd)] p-[14px] overflow-hidden" style={{ background: "var(--card)" }}>
+          <div className="flex items-center justify-between mb-3">
+            <div>
+              <div className="font-['Syne'] text-[13px] font-semibold text-[var(--ob-tx)]">
+                {t("lang") === "fr" ? "Statut factures" : "Invoice Status"}
               </div>
-            </CardHeader>
-            <CardContent>
-              {isLoading ? (
-                <div className="space-y-4">
-                  <Skeleton className="h-24 w-full rounded-lg" />
-                  <Skeleton className="h-24 w-full rounded-lg" />
-                  <Skeleton className="h-24 w-full rounded-lg" />
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {/* Total Orders Bar */}
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between text-sm">
-                      <div className="flex items-center gap-2">
-                        <div className="h-3 w-3 rounded-full bg-blue-500"></div>
-                        <span className="font-medium text-slate-700">Total Orders</span>
-                      </div>
-                      <span className="font-semibold text-slate-900">
-                        {stats?.order_stats?.total_orders || 0}
-                      </span>
-                    </div>
-                    <div className="h-3 bg-slate-100 rounded-full overflow-hidden">
-                      <div 
-                        className="h-full bg-gradient-to-r from-blue-500 to-blue-600 rounded-full transition-all duration-500"
-                        style={{ width: '100%' }}
-                      ></div>
-                    </div>
-                  </div>
-
-                  {/* Accepted Orders Bar */}
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between text-sm">
-                      <div className="flex items-center gap-2">
-                        <div className="h-3 w-3 rounded-full bg-purple-500"></div>
-                        <span className="font-medium text-slate-700">Accepted</span>
-                      </div>
-                      <span className="font-semibold text-slate-900">
-                        {stats?.order_stats?.total_accepted || 0}
-                      </span>
-                    </div>
-                    <div className="h-3 bg-slate-100 rounded-full overflow-hidden">
-                      <div 
-                        className="h-full bg-gradient-to-r from-purple-500 to-purple-600 rounded-full transition-all duration-500"
-                        style={{ 
-                          width: `${stats?.order_stats?.total_orders 
-                            ? Math.round((stats.order_stats.total_accepted / stats.order_stats.total_orders) * 100) 
-                            : 0}%` 
-                        }}
-                      ></div>
-                    </div>
-                    <p className="text-xs text-slate-500 text-right">
-                      {stats?.order_stats?.total_orders 
-                        ? Math.round((stats.order_stats.total_accepted / stats.order_stats.total_orders) * 100) 
-                        : 0}% of total
-                    </p>
-                  </div>
-
-                  {/* Recent Orders Bar */}
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between text-sm">
-                      <div className="flex items-center gap-2">
-                        <div className="h-3 w-3 rounded-full bg-amber-500"></div>
-                        <span className="font-medium text-slate-700">Recent</span>
-                      </div>
-                      <span className="font-semibold text-slate-900">
-                        {stats?.order_stats?.recent_created || 0}
-                      </span>
-                    </div>
-                    <div className="h-3 bg-slate-100 rounded-full overflow-hidden">
-                      <div 
-                        className="h-full bg-gradient-to-r from-amber-500 to-amber-600 rounded-full transition-all duration-500"
-                        style={{ 
-                          width: `${stats?.order_stats?.total_orders 
-                            ? Math.round((stats.order_stats.recent_created / stats.order_stats.total_orders) * 100) 
-                            : 0}%` 
-                        }}
-                      ></div>
-                    </div>
-                    <p className="text-xs text-slate-500 text-right">
-                      {stats?.order_stats?.total_orders 
-                        ? Math.round((stats.order_stats.recent_created / stats.order_stats.total_orders) * 100) 
-                        : 0}% of total
-                    </p>
-                  </div>
-
-                  {/* Finished Orders Bar */}
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between text-sm">
-                      <div className="flex items-center gap-2">
-                        <div className="h-3 w-3 rounded-full bg-green-500"></div>
-                        <span className="font-medium text-slate-700">Completed</span>
-                      </div>
-                      <span className="font-semibold text-slate-900">
-                        {stats?.order_stats?.total_finished || 0}
-                      </span>
-                    </div>
-                    <div className="h-3 bg-slate-100 rounded-full overflow-hidden">
-                      <div 
-                        className="h-full bg-gradient-to-r from-green-500 to-green-600 rounded-full transition-all duration-500"
-                        style={{ 
-                          width: `${stats?.order_stats?.total_orders 
-                            ? Math.round((stats.order_stats.total_finished / stats.order_stats.total_orders) * 100) 
-                            : 0}%` 
-                        }}
-                      ></div>
-                    </div>
-                    <p className="text-xs text-slate-500 text-right">
-                      {stats?.order_stats?.total_orders 
-                        ? Math.round((stats.order_stats.total_finished / stats.order_stats.total_orders) * 100) 
-                        : 0}% of total
-                    </p>
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Invoice Status Distribution */}
-          <Card className="border-slate-200 shadow-sm">
-            <CardHeader className="pb-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="text-xl font-semibold text-slate-900">Invoice Status</CardTitle>
-                  <CardDescription className="text-slate-600 mt-1">
-                    Payment status breakdown
-                  </CardDescription>
-                </div>
-                <div className="h-10 w-10 rounded-lg bg-green-50 flex items-center justify-center">
-                  <Receipt size={20} className="text-green-600" />
-                </div>
+              <div className="text-[10px] text-[var(--ob-txd)] mt-[2px]">
+                {t("lang") === "fr" ? "Repartition des paiements" : "Payment status breakdown"}
               </div>
-            </CardHeader>
-            <CardContent>
-              {isLoading ? (
-                <div className="space-y-4">
-                  <Skeleton className="h-32 w-full rounded-lg" />
-                  <Skeleton className="h-32 w-full rounded-lg" />
-                  <Skeleton className="h-32 w-full rounded-lg" />
-                </div>
-              ) : (
-                <div className="space-y-5">
-                  {/* Paid Invoices */}
-                  <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center gap-2">
-                        <div className="h-8 w-8 rounded-lg bg-green-100 flex items-center justify-center">
-                          <CheckCircle size={16} className="text-green-600" />
-                        </div>
-                        <div>
-                          <p className="font-semibold text-green-900">Paid</p>
-                          <p className="text-xs text-green-700">Fully settled</p>
-                        </div>
+            </div>
+            <div className="w-[34px] h-[34px] rounded-[10px] border border-[var(--ob-brd)] bg-[var(--ob-surf2)] flex items-center justify-center">
+              <Receipt size={15} className="text-[var(--ob-tl)]" />
+            </div>
+          </div>
+
+          {isLoading ? (
+            <div className="space-y-3">
+              <Skeleton className="h-20 w-full rounded bg-[var(--ob-surf3)]" />
+              <Skeleton className="h-20 w-full rounded bg-[var(--ob-surf3)]" />
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {[
+                { label: t("lang") === "fr" ? "Payees" : "Paid", sub: t("lang") === "fr" ? "Reglement complet" : "Fully settled", val: stats?.facture_stats?.PAID || 0, bg: "var(--ob-grnl)", border: "rgba(61,214,140,0.2)", color: "var(--ob-grn)", icon: CheckCircle },
+                { label: t("lang") === "fr" ? "Partiellement payees" : "Partial Paid", sub: t("lang") === "fr" ? "Paiement partiel" : "Partially settled", val: stats?.facture_stats?.PARTIAL_PAID || 0, bg: "var(--ob-pl)", border: "rgba(123,82,232,0.2)", color: "var(--ob-p2)", icon: CreditCard },
+                { label: t("lang") === "fr" ? "En attente" : "Pending", sub: t("lang") === "fr" ? "En attente de paiement" : "Awaiting payment", val: stats?.facture_stats?.PENDING_PAYMENT || 0, bg: "var(--ob-orl)", border: "rgba(232,98,42,0.2)", color: "var(--ob-or)", icon: Clock },
+              ].map((inv, i) => (
+                <div key={i} className="p-3 rounded-[10px] border" style={{ background: inv.bg, borderColor: inv.border }}>
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <div className="h-7 w-7 rounded-lg flex items-center justify-center" style={{ background: inv.bg }}>
+                        <inv.icon size={14} style={{ color: inv.color }} />
                       </div>
-                      <div className="text-right">
-                        <p className="text-2xl font-bold text-green-900">
-                          {stats?.facture_stats?.PAID || 0}
-                        </p>
-                        <p className="text-xs text-green-700">
-                          {getInvoicePercentage(stats?.facture_stats?.PAID || 0)}%
-                        </p>
+                      <div>
+                        <p className="text-[11.5px] font-semibold" style={{ color: inv.color }}>{inv.label}</p>
+                        <p className="text-[9px]" style={{ color: inv.color, opacity: 0.7 }}>{inv.sub}</p>
                       </div>
                     </div>
-                    <div className="h-2 bg-green-200 rounded-full overflow-hidden">
-                      <div 
-                        className="h-full bg-green-600 rounded-full transition-all duration-500"
-                        style={{ width: `${getInvoicePercentage(stats?.facture_stats?.PAID || 0)}%` }}
-                      ></div>
+                    <div className="text-right">
+                      <p className="text-xl font-bold" style={{ color: inv.color }}>{inv.val}</p>
+                      <p className="text-[9px]" style={{ color: inv.color, opacity: 0.7 }}>
+                        {pct(inv.val, totalInvoices)}%
+                      </p>
                     </div>
                   </div>
-
-                  {/* Partial Paid Invoices */}
-                  <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center gap-2">
-                        <div className="h-8 w-8 rounded-lg bg-blue-100 flex items-center justify-center">
-                          <CreditCard size={16} className="text-blue-600" />
-                        </div>
-                        <div>
-                          <p className="font-semibold text-blue-900">Partial Paid</p>
-                          <p className="text-xs text-blue-700">Partially settled</p>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-2xl font-bold text-blue-900">
-                          {stats?.facture_stats?.PARTIAL_PAID || 0}
-                        </p>
-                        <p className="text-xs text-blue-700">
-                          {getInvoicePercentage(stats?.facture_stats?.PARTIAL_PAID || 0)}%
-                        </p>
-                      </div>
-                    </div>
-                    <div className="h-2 bg-blue-200 rounded-full overflow-hidden">
-                      <div 
-                        className="h-full bg-blue-600 rounded-full transition-all duration-500"
-                        style={{ width: `${getInvoicePercentage(stats?.facture_stats?.PARTIAL_PAID || 0)}%` }}
-                      ></div>
-                    </div>
-                  </div>
-
-                  {/* Pending Payment Invoices */}
-                  <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center gap-2">
-                        <div className="h-8 w-8 rounded-lg bg-amber-100 flex items-center justify-center">
-                          <Clock size={16} className="text-amber-600" />
-                        </div>
-                        <div>
-                          <p className="font-semibold text-amber-900">Pending Payment</p>
-                          <p className="text-xs text-amber-700">Awaiting payment</p>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-2xl font-bold text-amber-900">
-                          {stats?.facture_stats?.PENDING_PAYMENT || 0}
-                        </p>
-                        <p className="text-xs text-amber-700">
-                          {getInvoicePercentage(stats?.facture_stats?.PENDING_PAYMENT || 0)}%
-                        </p>
-                      </div>
-                    </div>
-                    <div className="h-2 bg-amber-200 rounded-full overflow-hidden">
-                      <div 
-                        className="h-full bg-amber-600 rounded-full transition-all duration-500"
-                        style={{ width: `${getInvoicePercentage(stats?.facture_stats?.PENDING_PAYMENT || 0)}%` }}
-                      ></div>
-                    </div>
-                  </div>
-
-                  {/* Total Summary */}
-                  <div className="pt-4 border-t border-slate-200">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium text-slate-700">Total Invoices</span>
-                      <span className="text-lg font-bold text-slate-900">{totalInvoices}</span>
-                    </div>
+                  <div className="h-[4px] rounded-full overflow-hidden" style={{ background: inv.border }}>
+                    <div
+                      className="h-full rounded-full transition-all duration-500"
+                      style={{ width: `${pct(inv.val, totalInvoices)}%`, background: inv.color }}
+                    />
                   </div>
                 </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
+              ))}
 
-        {/* Quick Stats Summary */}
-        <div className="grid gap-6 md:grid-cols-3">
-          {/* Completion Rate */}
-          <Card className="border-slate-200 shadow-sm">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  <p className="text-sm font-medium text-slate-600">Completion Rate</p>
-                  <p className="text-xs text-slate-500 mt-1">Orders finished vs total</p>
-                </div>
-                <div className="h-10 w-10 rounded-lg bg-green-50 flex items-center justify-center">
-                  <TrendingUp size={20} className="text-green-600" />
-                </div>
+              <div className="pt-3 border-t border-[var(--ob-brd)] flex items-center justify-between">
+                <span className="text-[11px] font-medium text-[var(--ob-txd)]">Total</span>
+                <span className="text-[14px] font-bold text-[var(--ob-tx)]">{totalInvoices}</span>
               </div>
-              {isLoading ? (
-                <Skeleton className="h-12 w-24" />
-              ) : (
-                <div className="space-y-2">
-                  <p className="text-3xl font-bold text-slate-900">
-                    {stats?.order_stats?.total_orders 
-                      ? Math.round((stats.order_stats.total_finished / stats.order_stats.total_orders) * 100) 
-                      : 0}%
-                  </p>
-                  <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
-                    <div 
-                      className="h-full bg-gradient-to-r from-green-500 to-green-600 rounded-full transition-all duration-500"
-                      style={{ 
-                        width: `${stats?.order_stats?.total_orders 
-                          ? Math.round((stats.order_stats.total_finished / stats.order_stats.total_orders) * 100) 
-                          : 0}%` 
-                      }}
-                    ></div>
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Payment Rate */}
-          <Card className="border-slate-200 shadow-sm">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  <p className="text-sm font-medium text-slate-600">Payment Rate</p>
-                  <p className="text-xs text-slate-500 mt-1">Invoices paid vs total</p>
-                </div>
-                <div className="h-10 w-10 rounded-lg bg-emerald-50 flex items-center justify-center">
-                  <DollarSign size={20} className="text-emerald-600" />
-                </div>
-              </div>
-              {isLoading ? (
-                <Skeleton className="h-12 w-24" />
-              ) : (
-                <div className="space-y-2">
-                  <p className="text-3xl font-bold text-slate-900">
-                    {getInvoicePercentage(stats?.facture_stats?.PAID || 0)}%
-                  </p>
-                  <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
-                    <div 
-                      className="h-full bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-full transition-all duration-500"
-                      style={{ width: `${getInvoicePercentage(stats?.facture_stats?.PAID || 0)}%` }}
-                    ></div>
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Acceptance Rate */}
-          <Card className="border-slate-200 shadow-sm">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  <p className="text-sm font-medium text-slate-600">Acceptance Rate</p>
-                  <p className="text-xs text-slate-500 mt-1">Orders accepted vs total</p>
-                </div>
-                <div className="h-10 w-10 rounded-lg bg-purple-50 flex items-center justify-center">
-                  <CheckCircle size={20} className="text-purple-600" />
-                </div>
-              </div>
-              {isLoading ? (
-                <Skeleton className="h-12 w-24" />
-              ) : (
-                <div className="space-y-2">
-                  <p className="text-3xl font-bold text-slate-900">
-                    {stats?.order_stats?.total_orders 
-                      ? Math.round((stats.order_stats.total_accepted / stats.order_stats.total_orders) * 100) 
-                      : 0}%
-                  </p>
-                  <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
-                    <div 
-                      className="h-full bg-gradient-to-r from-purple-500 to-purple-600 rounded-full transition-all duration-500"
-                      style={{ 
-                        width: `${stats?.order_stats?.total_orders 
-                          ? Math.round((stats.order_stats.total_accepted / stats.order_stats.total_orders) * 100) 
-                          : 0}%` 
-                      }}
-                    ></div>
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+            </div>
+          )}
         </div>
       </div>
+
+      {/* Quick Stats */}
+      <div className="grid gap-[10px] md:grid-cols-3">
+        {[
+          { label: t("lang") === "fr" ? "Taux completion" : "Completion Rate", sub: t("lang") === "fr" ? "Terminees vs total" : "Orders finished vs total", val: `${pct(stats?.order_stats?.total_finished, stats?.order_stats?.total_orders)}%`, icon: TrendingUp, color: "var(--ob-grn)", accent: "var(--ob-grnl)" },
+          { label: t("lang") === "fr" ? "Taux paiement" : "Payment Rate", sub: t("lang") === "fr" ? "Factures payees vs total" : "Invoices paid vs total", val: `${pct(stats?.facture_stats?.PAID || 0, totalInvoices)}%`, icon: DollarSign, color: "var(--ob-tl)", accent: "var(--ob-tll)" },
+          { label: t("lang") === "fr" ? "Taux acceptation" : "Acceptance Rate", sub: t("lang") === "fr" ? "Acceptees vs total" : "Orders accepted vs total", val: `${pct(stats?.order_stats?.total_accepted, stats?.order_stats?.total_orders)}%`, icon: CheckCircle, color: "var(--ob-p2)", accent: "var(--ob-pl)" },
+        ].map((s, i) => (
+          <div key={i} className="rounded-[13px] border border-[var(--ob-brd)] p-[14px] overflow-hidden" style={{ background: "var(--card)" }}>
+            <div className="flex items-center justify-between mb-3">
+              <div>
+                <p className="text-[11px] font-medium text-[var(--ob-txm)]">{s.label}</p>
+                <p className="text-[9px] text-[var(--ob-txd)] mt-[2px]">{s.sub}</p>
+              </div>
+              <div className="w-[34px] h-[34px] rounded-[10px] flex items-center justify-center" style={{ background: s.accent }}>
+                <s.icon size={16} style={{ color: s.color }} />
+              </div>
+            </div>
+            {isLoading ? (
+              <Skeleton className="h-8 w-16 rounded bg-[var(--ob-surf3)]" />
+            ) : (
+              <div className="space-y-2">
+                <p className="font-['Syne'] text-[24px] font-bold text-[var(--ob-tx)]">{s.val}</p>
+                <div className="h-[5px] bg-[var(--ob-surf3)] rounded-full overflow-hidden">
+                  <div className="h-full rounded-full transition-all duration-500" style={{ width: s.val, background: `linear-gradient(90deg, ${s.color}, ${s.color}88)` }} />
+                </div>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+
+      <style>{`
+        .page-in { animation: pg .2s ease; }
+        @keyframes pg { from { opacity:0; transform:translateY(5px) } to { opacity:1; transform:translateY(0) } }
+      `}</style>
     </div>
   );
 }

@@ -1,39 +1,45 @@
 import React from 'react';
 
-const OrderDataCard = ({ 
-  title = "Orders", 
-  count = 156, 
-  icon = "📦", 
+const OrderDataCard = ({
+  title = "Orders",
+  count = 156,
+  icon = "📦",
   timeframe = "Today",
-  color = "blue" ,
+  color = "blue",
   data
 }) => {
-  // Color variants
   const colorVariants = {
-    blue: "bg-blue-50 text-blue-700",
-    green: "bg-green-50 text-green-700",
-    purple: "bg-purple-50 text-purple-700",
-    amber: "bg-amber-50 text-amber-700",
-    red: "bg-red-50 text-red-700"
+    blue: { bg: "var(--ob-pl)", text: "var(--ob-p2)" },
+    green: { bg: "var(--ob-grnl)", text: "var(--ob-grn)" },
+    purple: { bg: "var(--ob-pl)", text: "var(--ob-p2)" },
+    amber: { bg: "var(--ob-orl)", text: "var(--ob-or)" },
+    red: { bg: "var(--ob-redl)", text: "var(--ob-red)" },
+    teal: { bg: "var(--ob-tll)", text: "var(--ob-tl)" },
   };
-  
-  const selectedColor = colorVariants[color] || colorVariants.blue;
-  
+
+  const c = colorVariants[color] || colorVariants.blue;
+
   return (
-    <div className="bg-white shadow-md rounded-lg p-6 w-full max-w-xs">
-      <div className="flex justify-between items-center mb-4">
-        <h3 className="text-gray-700 font-medium">{title}</h3>
-        <div className={`p-2 rounded-full ${selectedColor}`}>
-          <span className="text-lg">{icon}</span>
+    <div
+      className="rounded-[13px] border border-[var(--ob-brd)] p-[14px] w-full transition-all duration-200 hover:border-[var(--ob-brd2)] hover:-translate-y-[1px] relative overflow-hidden"
+      style={{ background: "linear-gradient(135deg, #131728, #181D30)" }}
+    >
+      <div className="flex justify-between items-center mb-3">
+        <h3 className="text-[11px] font-semibold text-[var(--ob-txm)]">{title}</h3>
+        <div
+          className="w-[30px] h-[30px] rounded-[8px] flex items-center justify-center text-sm"
+          style={{ background: c.bg }}
+        >
+          <span>{icon}</span>
         </div>
       </div>
-      
+
       <div className="flex flex-col">
-        <h2 className="text-5xl font-bold text-gray-800">{data}</h2>
-        <span className="text-sm text-gray-500 mt-1">{timeframe}</span>
+        <h2 className="font-['Syne'] text-[28px] font-bold text-[var(--ob-tx)] leading-none">{data}</h2>
+        <span className="text-[10px] text-[var(--ob-txd)] mt-1.5">{timeframe}</span>
       </div>
     </div>
   );
 };
 
-export default OrderDataCard;
+export default React.memo(OrderDataCard);

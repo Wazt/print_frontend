@@ -2,31 +2,34 @@ import { CheckCircle } from "lucide-react";
 import React from "react";
 
 function StatusBadge({ status }) {
-  const getBgColor = (status) => {
+  const getStyle = (status) => {
     switch (status) {
       case "pending":
-        return "bg-orange-50 text-orange-600";
+        return "bg-[var(--ob-orl)] text-[var(--ob-or)] border-[rgba(232,98,42,0.2)]";
       case "printed":
-        return "bg-green-50 text-green-600";
+      case "finished":
+      case "delivered":
+        return "bg-[var(--ob-grnl)] text-[var(--ob-grn)] border-[rgba(61,214,140,0.2)]";
       case "in_progress":
-        return "bg-blue-50 text-blue-600";
+      case "processing":
+      case "accepted":
+        return "bg-[var(--ob-tll)] text-[var(--ob-tl)] border-[rgba(26,188,176,0.2)]";
       case "cancelled":
-        return "bg-red-50 text-red-600";
+      case "rejected":
+        return "bg-[var(--ob-redl)] text-[var(--ob-red)] border-[rgba(240,80,80,0.2)]";
       default:
-        return "bg-gray-50 text-gray-600";
+        return "bg-[var(--ob-surf2)] text-[var(--ob-txm)] border-[var(--ob-brd)]";
     }
   };
 
   return (
     <span
-      className={`flex items-center ${getBgColor(
-        status
-      )} px-3 py-1 rounded-full text-sm`}
+      className={`inline-flex items-center gap-1.5 ${getStyle(status)} px-2 py-[2px] rounded-full text-[9px] font-semibold border whitespace-nowrap`}
     >
-      <CheckCircle size={16} className="mr-1" />
+      <CheckCircle size={11} />
       {status}
     </span>
   );
 }
 
-export default StatusBadge;
+export default React.memo(StatusBadge);

@@ -10,6 +10,7 @@ import OrderDetailSummary from "@/Components/OrderDetails/OrderDetailSummary";
 import OrderDetailItems from "@/Components/OrderDetails/OrderDetailItems";
 import OrderWorkflowTimeline from "@/Components/OrderDetails/OrderWorkflowTimeline";
 import OrderFinancialSection from "@/Components/OrderDetails/OrderFinancialSection";
+import ClientOrderDetails from "@/Pages/ClientOrderDetails";
 import AuthContext from "@/contexts/AuthContext";
 import { useContext } from "react";
 function OrderDetails() {
@@ -92,6 +93,11 @@ function OrderDetails() {
         </div>
       </div>
     );
+  }
+
+  // Client role gets the client tracking view
+  if (userRole === "CLIENT") {
+    return <ClientOrderDetails order={orderData} />;
   }
 
   const hasUploadingFiles = orderData?.items?.some(

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { toast } from "sonner";
 import { Button } from "@/Components/ui/button";
 import { Card, CardContent } from "@/Components/ui/card";
 import { Input } from "@/Components/ui/input";
@@ -72,9 +73,13 @@ function RawMaterialDetailPage() {
   }, [material]);
 
   const handleUpdate = async () => {
-    const updated = await updateRawMaterial(material.id, formData);
-    setMaterial(updated);
-    setIsEditOpen(false);
+    try {
+      const updated = await updateRawMaterial(material.id, formData);
+      setMaterial(updated);
+      setIsEditOpen(false);
+    } catch {
+      toast.error("Failed to update material");
+    }
   };
 
   const handleDelete = async () => {
