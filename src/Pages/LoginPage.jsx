@@ -131,9 +131,15 @@ export default function LoginPage() {
                   <input type="checkbox" className="h-4 w-4 rounded border-[var(--border-2)] accent-[var(--accent)]" />
                   {t("lang") === "fr" ? "Rester connecte" : "Keep me signed in"}
                 </label>
-                <a href="#" className="text-[13px] font-medium text-sky-400 hover:underline">
+                <button
+                  type="button"
+                  className="text-[13px] font-medium text-[var(--accent)] hover:underline focus-visible:outline-none focus-visible:shadow-[var(--shadow-focus)] rounded-[var(--radius-sm)]"
+                  onClick={() => {
+                    // TODO: wire up forgot password flow
+                  }}
+                >
                   {t("lang") === "fr" ? "Mot de passe oublie ?" : "Forgot password?"}
-                </a>
+                </button>
               </div>
 
               <Button type="submit" variant="accent" size="lg" loading={isLoading} className="w-full">

@@ -1,153 +1,287 @@
-import React, { useState, useEffect } from "react";
-import { Card, CardContent } from "@/Components/ui/card";
-import { Button } from "@/Components/ui/button";
-import { Badge } from "@/Components/ui/badge";
+import React, { useState, useEffect, useCallback } from "react";
 import {
-  FileText,
-  Download,
-  Plus,
-  Calendar,
-  DollarSign,
-  CheckCircle,
-  Clock,
-  XCircle,
-  CreditCard,
-  Receipt,
-  Eye,
-  Loader2,
-  User,
-  Building2,
+  FileText, Download, Plus, Calendar, CheckCircle, Clock, XCircle,
+  CreditCard, Receipt, Eye, Loader2, User, Building2,
 } from "lucide-react";
 import { toast } from "sonner";
-import {createDevis , getOrderDocuments } from "@/Services/FinanceService";
+import { createDevis, getOrderDocuments } from "@/Services/FinanceService";
+import { Button, DataCard, StatCard, StatusPill, EmptyState } from "@/Components/primitives";
+import { useLanguage } from "@/contexts/LanguageContext";
+
+const DOC_STATUS_LABELS = {
+  DRAFT: { en: "Draft", fr: "Brouillon" },
+  PENDING: { en: "Pending", fr: "En attente" },
+  APPROVED: { en: "Approved", fr: "Approuve" },
+  PAID: { en: "Paid", fr: "Paye" },
+  PARTIAL_PAID: { en: "Partial paid", fr: "Paie partiel" },
+  CANCELLED: { en: "Cancelled", fr: "Annule" },
+};
+
+function formatCurrency(amount) {
+  return `${(amount || 0).toLocaleString()} DZD`;
+}
+
+function formatDate(dateString, isFr) {
+  if (!dateString) return "—";
+  return new Date(dateString).toLocaleDateString(isFr ? "fr-FR" : "en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+function DocumentStatusPill({ status, isFr }) {
+  const labels = DOC_STATUS_LABELS[status];
+  const label = labels ? (isFr ? labels.fr : labels.en) : status;
+
+  const statusTone = {
+    DRAFT: "neutral",
+    PENDING: "warning",
+    APPROVED: "success",
+    PAID: "success",
+    PARTIAL_PAID: "info",
+    CANCELLED: "danger",
+  }[status] || "neutral";
+
+  return <StatusPill tone={statusTone} label={label} size="sm" />;
+}
+
+function DocumentCard({ doc, type, isFr }) {
+  const isDevis = type === "devis";
+
+  return (
+    <div className="rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)] p-4 hover:border-[var(--border-2)] transition-colors">
+      <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-4">
+        <div className="flex-1 min-w-0 space-y-3">
+          {/* Header */}
+          <div className="flex flex-wrap items-center gap-2">
+            <h3 className="font-semibold text-[15px] text-[var(--text)] font-mono">
+              {doc.document_number}
+            </h3>
+            <DocumentStatusPill status={doc.status} isFr={isFr} />
+            {!isDevis && doc.devis_id && (
+              <StatusPill
+                tone="info"
+                label={isFr ? "Depuis devis" : "From quote"}
+                size="sm"
+                dot={false}
+              />
+            )}
+          </div>
+
+          {/* Financial details */}
+          <div
+            className={`grid grid-cols-2 ${
+              isDevis ? "md:grid-cols-3" : "md:grid-cols-4"
+            } gap-3`}
+          >
+            <FinanceCell
+              label={isFr ? "Total HT" : "Total HT"}
+              value={formatCurrency(doc.total_ht)}
+            />
+            <FinanceCell
+              label={isFr ? "Total TTC" : "Total TTC"}
+              value={formatCurrency(doc.total)}
+              strong
+            />
+            {!isDevis && (
+              <FinanceCell
+                label={isFr ? "Paye" : "Paid"}
+                value={formatCurrency(doc.total_paid)}
+                tone="success"
+              />
+            )}
+            <FinanceCell
+              label={isFr ? "Restant" : "Remaining"}
+              value={formatCurrency(doc.total_remaining)}
+              tone={doc.total_remaining > 0 ? "danger" : "success"}
+            />
+          </div>
+
+          {/* Meta */}
+          <div className="flex flex-wrap gap-x-4 gap-y-1 text-[12px] text-[var(--text-3)]">
+            {doc.creator?.username && (
+              <span className="flex items-center gap-1.5">
+                <User size={12} />
+                {isFr ? "Par" : "By"}: {doc.creator.username}
+              </span>
+            )}
+            {doc.company?.name && (
+              <span className="flex items-center gap-1.5">
+                <Building2 size={12} />
+                {doc.company.name}
+              </span>
+            )}
+            <span className="flex items-center gap-1.5">
+              <Calendar size={12} />
+              {formatDate(doc.created_at, isFr)}
+            </span>
+          </div>
+
+          {/* Payments (only for factures) */}
+          {!isDevis && doc.payments?.length > 0 && (
+            <div
+              className="rounded-[var(--radius)] p-3"
+              style={{
+                background: "var(--success-bg)",
+                border: "1px solid color-mix(in srgb, var(--success) 20%, transparent)",
+              }}
+            >
+              <div className="flex items-center gap-2 mb-2">
+                <CreditCard size={14} style={{ color: "var(--success)" }} />
+                <h4
+                  className="font-semibold text-[12px]"
+                  style={{ color: "var(--success)" }}
+                >
+                  {isFr ? "Paiements" : "Payments"} ({doc.payments.length})
+                </h4>
+              </div>
+              <div className="space-y-1.5">
+                {doc.payments.map((payment) => (
+                  <div
+                    key={payment.id}
+                    className="flex items-center justify-between text-[12px]"
+                    style={{ color: "var(--success)" }}
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold tabular-nums">
+                        {formatCurrency(payment.amount)}
+                      </span>
+                      <span style={{ opacity: 0.8 }}>
+                        {isFr ? "via" : "via"} {payment.payment_method}
+                      </span>
+                    </div>
+                    <span style={{ opacity: 0.7 }}>
+                      {formatDate(payment.created_at, isFr)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Approval */}
+          {doc.approved_at && doc.approver && (
+            <div
+              className="flex items-center gap-2 text-[12px] rounded-[var(--radius)] px-3 py-2"
+              style={{
+                background: "var(--success-bg)",
+                color: "var(--success)",
+              }}
+            >
+              <CheckCircle size={14} />
+              <span>
+                {isFr ? "Approuve par" : "Approved by"} {doc.approver.username}{" "}
+                {isFr ? "le" : "on"} {formatDate(doc.approved_at, isFr)}
+              </span>
+            </div>
+          )}
+        </div>
+
+        {/* Actions */}
+        <div className="flex lg:flex-col gap-2 flex-shrink-0">
+          <Button size="sm" variant="outline">
+            <Eye size={14} />
+            {isFr ? "Voir" : "View"}
+          </Button>
+          <Button size="sm" variant="outline">
+            <Download size={14} />
+            PDF
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function FinanceCell({ label, value, strong, tone }) {
+  const color =
+    tone === "danger"
+      ? "var(--danger)"
+      : tone === "success"
+      ? "var(--success)"
+      : "var(--text)";
+  return (
+    <div>
+      <p className="text-[10px] uppercase tracking-wider text-[var(--text-3)] font-medium mb-1">
+        {label}
+      </p>
+      <p
+        className={`tabular-nums ${strong ? "text-[15px] font-bold" : "text-[13px] font-semibold"}`}
+        style={{ color }}
+      >
+        {value}
+      </p>
+    </div>
+  );
+}
 
 function OrderFinancialSection({ orderId, orderData }) {
+  const { t } = useLanguage();
+  const isFr = t("lang") === "fr";
+
   const [documents, setDocuments] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isCreatingDevis, setIsCreatingDevis] = useState(false);
-  const [pagination, setPagination] = useState({ page: 1, total_pages: 1, total_items: 0 });
 
-  useEffect(() => {
-    fetchDocuments();
-  }, [orderId]);
-
-  const fetchDocuments = async () => {
+  const fetchDocuments = useCallback(async () => {
     setIsLoading(true);
     try {
-      const [documentsData, paginationData] = await getOrderDocuments(orderId);
+      const [documentsData] = await getOrderDocuments(orderId);
       setDocuments(documentsData || []);
-      setPagination(paginationData || { page: 1, total_pages: 1, total_items: 0 });
     } catch (error) {
       console.error("Failed to fetch documents:", error);
-      toast.error("Failed to load financial documents");
+      toast.error(isFr ? "Echec du chargement" : "Failed to load financial documents");
       setDocuments([]);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [orderId, isFr]);
+
+  useEffect(() => {
+    fetchDocuments();
+  }, [fetchDocuments]);
 
   const handleCreateDevis = async () => {
     if (!orderData?.company?.id) {
-      toast.error("Company information is missing");
+      toast.error(isFr ? "Infos entreprise manquantes" : "Company information is missing");
       return;
     }
-
     setIsCreatingDevis(true);
     try {
-      const data = {
-        order_id: orderId,
-        company_id: orderData.company.id,
-      };
-
-      await createDevis(data);
-      toast.success("Quote created successfully");
-      
-      // Refresh documents list
+      await createDevis({ order_id: orderId, company_id: orderData.company.id });
+      toast.success(isFr ? "Devis cree" : "Quote created successfully");
       await fetchDocuments();
     } catch (error) {
       console.error("Failed to create devis:", error);
-      toast.error("Failed to create quote");
+      toast.error(isFr ? "Echec de la creation du devis" : "Failed to create quote");
     } finally {
       setIsCreatingDevis(false);
     }
   };
 
-  // Separate documents by type
-  const devis = documents.filter(doc => doc.document_type === "DEVIS");
-  const factures = documents.filter(doc => doc.document_type === "FACTURE");
+  const devis = documents.filter((doc) => doc.document_type === "DEVIS");
+  const factures = documents.filter((doc) => doc.document_type === "FACTURE");
 
-  // Calculate all payments from all factures
-  const allPayments = factures.flatMap(facture => 
-    facture.payments.map(payment => ({
-      ...payment,
-      facture_number: facture.document_number,
-      facture_id: facture.id,
-    }))
-  );
-
-  // Financial calculations
+  const allPayments = factures.flatMap((f) => f.payments || []);
   const totalQuoted = devis.reduce((sum, d) => sum + (d.total || 0), 0);
   const totalInvoiced = factures.reduce((sum, f) => sum + (f.total || 0), 0);
   const totalPaid = factures.reduce((sum, f) => sum + (f.total_paid || 0), 0);
   const totalRemaining = factures.reduce((sum, f) => sum + (f.total_remaining || 0), 0);
 
-  const getDocumentStatusConfig = (status) => {
-    const configs = {
-      DRAFT: {
-        color: "bg-slate-50 text-slate-700 border-slate-200",
-        icon: FileText,
-        label: "Draft"
-      },
-      PENDING: {
-        color: "bg-amber-50 text-amber-700 border-amber-200",
-        icon: Clock,
-        label: "Pending"
-      },
-      APPROVED: {
-        color: "bg-green-50 text-green-700 border-green-200",
-        icon: CheckCircle,
-        label: "Approved"
-      },
-      PAID: {
-        color: "bg-emerald-50 text-emerald-700 border-emerald-200",
-        icon: CheckCircle,
-        label: "Paid"
-      },
-      PARTIAL_PAID: {
-        color: "bg-blue-50 text-blue-700 border-blue-200",
-        icon: CreditCard,
-        label: "Partial Paid"
-      },
-      CANCELLED: {
-        color: "bg-red-50 text-red-700 border-red-200",
-        icon: XCircle,
-        label: "Cancelled"
-      },
-    };
-    return configs[status] || configs.DRAFT;
-  };
-
-  const formatDate = (dateString) => {
-    if (!dateString) return "—";
-    return new Date(dateString).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
-
-  const formatCurrency = (amount) => {
-    return `${(amount || 0).toLocaleString()} DZD`;
-  };
-
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-12">
+      <div className="flex items-center justify-center py-16">
         <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin text-slate-400 mx-auto mb-3" />
-          <p className="text-slate-600">Loading financial documents...</p>
+          <Loader2
+            className="animate-spin text-[var(--accent)] mx-auto mb-3"
+            size={28}
+          />
+          <p className="text-[13px] text-[var(--text-3)]">
+            {isFr ? "Chargement des documents..." : "Loading financial documents..."}
+          </p>
         </div>
       </div>
     );
@@ -155,293 +289,109 @@ function OrderFinancialSection({ orderId, orderData }) {
 
   return (
     <div className="space-y-6">
-      {/* Financial Summary */}
-      <Card className="border-slate-200 shadow-sm">
-        <CardContent className="p-6">
-          <h2 className="text-lg font-semibold text-slate-900 mb-6">Financial Summary</h2>
-          
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            <div className="space-y-2">
-              <p className="text-sm text-slate-600">Total Quoted</p>
-              <p className="text-2xl font-bold text-blue-600">{formatCurrency(totalQuoted)}</p>
-              <p className="text-xs text-slate-500">{devis.length} quote(s)</p>
-            </div>
-            <div className="space-y-2">
-              <p className="text-sm text-slate-600">Total Invoiced</p>
-              <p className="text-2xl font-bold text-purple-600">{formatCurrency(totalInvoiced)}</p>
-              <p className="text-xs text-slate-500">{factures.length} invoice(s)</p>
-            </div>
-            <div className="space-y-2">
-              <p className="text-sm text-slate-600">Total Paid</p>
-              <p className="text-2xl font-bold text-green-600">{formatCurrency(totalPaid)}</p>
-              <p className="text-xs text-slate-500">{allPayments.length} payment(s)</p>
-            </div>
-            <div className="space-y-2">
-              <p className="text-sm text-slate-600">Remaining</p>
-              <p className={`text-2xl font-bold ${totalRemaining > 0 ? 'text-red-600' : 'text-green-600'}`}>
-                {formatCurrency(totalRemaining)}
-              </p>
-              <p className="text-xs text-slate-500">
-                {totalRemaining > 0 ? 'Outstanding' : 'Fully paid'}
-              </p>
-            </div>
+      {/* Financial summary */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatCard
+          label={isFr ? "Total devise" : "Total quoted"}
+          value={formatCurrency(totalQuoted)}
+          hint={`${devis.length} ${isFr ? "devis" : "quote(s)"}`}
+          icon={FileText}
+          tone="accent"
+        />
+        <StatCard
+          label={isFr ? "Total facture" : "Total invoiced"}
+          value={formatCurrency(totalInvoiced)}
+          hint={`${factures.length} ${isFr ? "facture(s)" : "invoice(s)"}`}
+          icon={Receipt}
+          tone="accent"
+        />
+        <StatCard
+          label={isFr ? "Total paye" : "Total paid"}
+          value={formatCurrency(totalPaid)}
+          hint={`${allPayments.length} ${isFr ? "paiement(s)" : "payment(s)"}`}
+          icon={CheckCircle}
+          tone="success"
+        />
+        <StatCard
+          label={isFr ? "Restant" : "Remaining"}
+          value={formatCurrency(totalRemaining)}
+          hint={
+            totalRemaining > 0
+              ? isFr ? "En attente" : "Outstanding"
+              : isFr ? "Tout paye" : "Fully paid"
+          }
+          icon={CreditCard}
+          tone={totalRemaining > 0 ? "danger" : "success"}
+        />
+      </div>
+
+      {/* Quotes (DEVIS) */}
+      <DataCard
+        title={isFr ? "Devis" : "Quotes"}
+        description={`${devis.length} ${isFr ? "devis genere(s)" : "quote(s) generated"}`}
+        icon={FileText}
+        action={
+          <Button
+            size="sm"
+            variant="accent"
+            onClick={handleCreateDevis}
+            disabled={isCreatingDevis}
+            loading={isCreatingDevis}
+          >
+            <Plus size={14} />
+            {isFr ? "Nouveau devis" : "New quote"}
+          </Button>
+        }
+      >
+        {devis.length === 0 ? (
+          <EmptyState
+            icon={FileText}
+            title={isFr ? "Aucun devis" : "No quotes yet"}
+            description={
+              isFr
+                ? "Aucun devis n'a ete genere pour cette commande."
+                : "No quotes have been generated for this order."
+            }
+          />
+        ) : (
+          <div className="space-y-3">
+            {devis.map((quote) => (
+              <DocumentCard key={quote.id} doc={quote} type="devis" isFr={isFr} />
+            ))}
           </div>
-        </CardContent>
-      </Card>
+        )}
+      </DataCard>
 
-      {/* Quotes (DEVIS) Section */}
-      <Card className="border-slate-200 shadow-sm">
-        <CardContent className="p-6">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-lg bg-blue-50 flex items-center justify-center">
-                <FileText size={20} className="text-blue-600" />
-              </div>
-              <div>
-                <h2 className="text-lg font-semibold text-slate-900">Quotes (Devis)</h2>
-                <p className="text-sm text-slate-600">{devis.length} quote(s) generated</p>
-              </div>
-            </div>
-            <Button 
-              size="sm" 
-              className="gap-2 bg-slate-900 hover:bg-slate-800"
-              onClick={handleCreateDevis}
-              disabled={isCreatingDevis}
-            >
-              {isCreatingDevis ? (
-                <>
-                  <Loader2 size={16} className="animate-spin" />
-                  Creating...
-                </>
-              ) : (
-                <>
-                  <Plus size={16} />
-                  New Quote
-                </>
-              )}
-            </Button>
+      {/* Invoices (FACTURES) */}
+      <DataCard
+        title={isFr ? "Factures" : "Invoices"}
+        description={`${factures.length} ${isFr ? "facture(s) emise(s)" : "invoice(s) issued"}`}
+        icon={Receipt}
+        action={
+          <Button size="sm" variant="accent" disabled>
+            <Plus size={14} />
+            {isFr ? "Nouvelle facture" : "New invoice"}
+          </Button>
+        }
+      >
+        {factures.length === 0 ? (
+          <EmptyState
+            icon={Receipt}
+            title={isFr ? "Aucune facture" : "No invoices yet"}
+            description={
+              isFr
+                ? "Aucune facture n'a ete emise pour cette commande."
+                : "No invoices have been issued for this order."
+            }
+          />
+        ) : (
+          <div className="space-y-3">
+            {factures.map((facture) => (
+              <DocumentCard key={facture.id} doc={facture} type="facture" isFr={isFr} />
+            ))}
           </div>
-
-          {devis.length === 0 ? (
-            <div className="text-center py-8">
-              <FileText className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-              <p className="text-slate-600">No quotes generated yet</p>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {devis.map((quote) => {
-                const statusConfig = getDocumentStatusConfig(quote.status);
-                const StatusIcon = statusConfig.icon;
-
-                return (
-                  <div key={quote.id} className="border border-slate-200 rounded-lg p-5 hover:border-slate-300 transition-colors bg-white">
-                    <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-4">
-                      <div className="flex-1 space-y-4">
-                        {/* Header */}
-                        <div className="flex items-center gap-3">
-                          <h3 className="font-semibold text-slate-900 text-lg">{quote.document_number}</h3>
-                          <Badge variant="outline" className={`${statusConfig.color} border gap-1.5`}>
-                            <StatusIcon size={12} />
-                            {statusConfig.label}
-                          </Badge>
-                        </div>
-
-                        {/* Financial Details */}
-                        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                          <div>
-                            <p className="text-xs text-slate-500 mb-1">Total HT</p>
-                            <p className="text-sm font-semibold text-slate-900">{formatCurrency(quote.total_ht)}</p>
-                          </div>
-                          <div>
-                            <p className="text-xs text-slate-500 mb-1">Total TTC</p>
-                            <p className="text-sm font-semibold text-slate-900">{formatCurrency(quote.total)}</p>
-                          </div>
-                          <div>
-                            <p className="text-xs text-slate-500 mb-1">Remaining</p>
-                            <p className="text-sm font-semibold text-red-600">{formatCurrency(quote.total_remaining)}</p>
-                          </div>
-                        </div>
-
-                        {/* Meta Information */}
-                        <div className="flex flex-wrap gap-4 text-sm text-slate-600">
-                          <div className="flex items-center gap-2">
-                            <User size={14} />
-                            <span>By: {quote.creator?.username}</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Building2 size={14} />
-                            <span>{quote.company?.name}</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Calendar size={14} />
-                            <span>{formatDate(quote.created_at)}</span>
-                          </div>
-                        </div>
-
-                        {/* Approval Info */}
-                        {quote.approved_at && quote.approver && (
-                          <div className="flex items-center gap-2 text-sm text-green-600 bg-green-50 border border-green-200 rounded-lg px-3 py-2">
-                            <CheckCircle size={14} />
-                            <span>Approved by {quote.approver.username} on {formatDate(quote.approved_at)}</span>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Actions */}
-                      <div className="flex gap-2">
-                        <Button size="sm" variant="outline" className="gap-2 border-slate-300">
-                          <Eye size={14} />
-                          View
-                        </Button>
-                        <Button size="sm" variant="outline" className="gap-2 border-slate-300">
-                          <Download size={14} />
-                          PDF
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Invoices (FACTURE) Section */}
-      <Card className="border-slate-200 shadow-sm">
-        <CardContent className="p-6">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-lg bg-purple-50 flex items-center justify-center">
-                <Receipt size={20} className="text-purple-600" />
-              </div>
-              <div>
-                <h2 className="text-lg font-semibold text-slate-900">Invoices (Factures)</h2>
-                <p className="text-sm text-slate-600">{factures.length} invoice(s) issued</p>
-              </div>
-            </div>
-            <Button size="sm" className="gap-2 bg-purple-600 hover:bg-purple-700">
-              <Plus size={16} />
-              New Invoice
-            </Button>
-          </div>
-
-          {factures.length === 0 ? (
-            <div className="text-center py-8">
-              <Receipt className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-              <p className="text-slate-600">No invoices issued yet</p>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {factures.map((facture) => {
-                const statusConfig = getDocumentStatusConfig(facture.status);
-                const StatusIcon = statusConfig.icon;
-
-                return (
-                  <div key={facture.id} className="border border-slate-200 rounded-lg p-5 hover:border-slate-300 transition-colors bg-white">
-                    <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-4">
-                      <div className="flex-1 space-y-4">
-                        {/* Header */}
-                        <div className="flex items-center gap-3">
-                          <h3 className="font-semibold text-slate-900 text-lg">{facture.document_number}</h3>
-                          <Badge variant="outline" className={`${statusConfig.color} border gap-1.5`}>
-                            <StatusIcon size={12} />
-                            {statusConfig.label}
-                          </Badge>
-                          {facture.devis_id && (
-                            <Badge variant="outline" className="border-blue-200 text-blue-700 bg-blue-50">
-                              From Quote
-                            </Badge>
-                          )}
-                        </div>
-
-                        {/* Financial Details */}
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                          <div>
-                            <p className="text-xs text-slate-500 mb-1">Total HT</p>
-                            <p className="text-sm font-semibold text-slate-900">{formatCurrency(facture.total_ht)}</p>
-                          </div>
-                          <div>
-                            <p className="text-xs text-slate-500 mb-1">Total TTC</p>
-                            <p className="text-sm font-semibold text-slate-900">{formatCurrency(facture.total)}</p>
-                          </div>
-                          <div>
-                            <p className="text-xs text-slate-500 mb-1">Paid</p>
-                            <p className="text-sm font-semibold text-green-600">{formatCurrency(facture.total_paid)}</p>
-                          </div>
-                          <div>
-                            <p className="text-xs text-slate-500 mb-1">Remaining</p>
-                            <p className={`text-sm font-semibold ${facture.total_remaining > 0 ? 'text-red-600' : 'text-green-600'}`}>
-                              {formatCurrency(facture.total_remaining)}
-                            </p>
-                          </div>
-                        </div>
-
-                        {/* Meta Information */}
-                        <div className="flex flex-wrap gap-4 text-sm text-slate-600">
-                          <div className="flex items-center gap-2">
-                            <User size={14} />
-                            <span>By: {facture.creator?.username}</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Building2 size={14} />
-                            <span>{facture.company?.name}</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Calendar size={14} />
-                            <span>{formatDate(facture.created_at)}</span>
-                          </div>
-                        </div>
-
-                        {/* Payments List */}
-                        {facture.payments.length > 0 && (
-                          <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                            <div className="flex items-center gap-2 mb-3">
-                              <CreditCard size={16} className="text-green-600" />
-                              <h4 className="font-semibold text-green-900">Payments ({facture.payments.length})</h4>
-                            </div>
-                            <div className="space-y-2">
-                              {facture.payments.map((payment) => (
-                                <div key={payment.id} className="flex items-center justify-between text-sm">
-                                  <div className="flex items-center gap-3">
-                                    <span className="font-medium text-green-900">{formatCurrency(payment.amount)}</span>
-                                    <span className="text-green-700">via {payment.payment_method}</span>
-                                  </div>
-                                  <span className="text-green-600">{formatDate(payment.created_at)}</span>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Approval Info */}
-                        {facture.approved_at && facture.approver && (
-                          <div className="flex items-center gap-2 text-sm text-green-600 bg-green-50 border border-green-200 rounded-lg px-3 py-2">
-                            <CheckCircle size={14} />
-                            <span>Approved by {facture.approver.username} on {formatDate(facture.approved_at)}</span>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Actions */}
-                      <div className="flex gap-2">
-                        <Button size="sm" variant="outline" className="gap-2 border-slate-300">
-                          <Eye size={14} />
-                          View
-                        </Button>
-                        <Button size="sm" variant="outline" className="gap-2 border-slate-300">
-                          <Download size={14} />
-                          PDF
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+        )}
+      </DataCard>
     </div>
   );
 }

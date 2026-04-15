@@ -81,7 +81,7 @@ export default function ProductCreatePage() {
   return (
     <div className="space-y-6 max-w-3xl">
       <div className="flex items-center gap-3">
-        <Button variant="outline" size="icon" onClick={() => navigate(-1)}>
+        <Button variant="outline" size="icon" onClick={() => navigate(-1)} aria-label={t("lang") === "fr" ? "Retour" : "Back"}>
           <ArrowLeft size={16} />
         </Button>
         <PageHeader
@@ -174,8 +174,9 @@ export default function ProductCreatePage() {
                     size="icon"
                     type="button"
                     onClick={() => removeMaterial(i)}
+                    aria-label={t("lang") === "fr" ? "Supprimer la matiere" : "Remove material"}
                   >
-                    <Trash2 size={14} className="text-[var(--danger)]" />
+                    <Trash2 size={14} className="text-[var(--danger)]" aria-hidden="true" />
                   </Button>
                 </div>
               ))}

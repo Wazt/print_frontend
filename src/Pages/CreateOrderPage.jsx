@@ -139,7 +139,7 @@ export default function CreateOrderPage() {
   return (
     <div className="space-y-6 max-w-5xl">
       <div className="flex items-center gap-3">
-        <Button variant="outline" size="icon" onClick={() => navigate(-1)}>
+        <Button variant="outline" size="icon" onClick={() => navigate(-1)} aria-label={t("lang") === "fr" ? "Retour" : "Back"}>
           <ArrowLeft size={16} />
         </Button>
         <PageHeader
@@ -192,9 +192,9 @@ export default function CreateOrderPage() {
                   size="icon"
                   type="button"
                   onClick={() => removeItem(i)}
-                  aria-label="Remove"
+                  aria-label={t("lang") === "fr" ? `Supprimer l'article ${i + 1}` : `Remove item ${i + 1}`}
                 >
-                  <Trash2 size={15} className="text-[var(--danger)]" />
+                  <Trash2 size={15} className="text-[var(--danger)]" aria-hidden="true" />
                 </Button>
               }
             >
@@ -267,8 +267,14 @@ export default function CreateOrderPage() {
                       <div className="text-[13px] font-semibold text-[var(--text)] truncate">{item.file.name}</div>
                       <div className="text-[11px] text-[var(--text-3)]">{formatFileSize(item.file.size)}</div>
                     </div>
-                    <Button variant="ghost" size="icon" type="button" onClick={() => removeFile(i)}>
-                      <X size={15} />
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      type="button"
+                      onClick={() => removeFile(i)}
+                      aria-label={t("lang") === "fr" ? "Supprimer le fichier" : "Remove file"}
+                    >
+                      <X size={15} aria-hidden="true" />
                     </Button>
                   </div>
                 )}

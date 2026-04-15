@@ -111,7 +111,7 @@ export default function RawMaterialDetailPage() {
   return (
     <div className="space-y-6 max-w-4xl">
       <div className="flex items-center gap-3">
-        <Button variant="outline" size="icon" onClick={() => navigate("/stock")}>
+        <Button variant="outline" size="icon" onClick={() => navigate("/stock")} aria-label={t("lang") === "fr" ? "Retour" : "Back"}>
           <ArrowLeft size={16} />
         </Button>
         <PageHeader

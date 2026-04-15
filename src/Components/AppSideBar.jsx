@@ -68,18 +68,26 @@ export function AppSidebar({ onNavigate }) {
       <Link
         to={item.url}
         onClick={onNavigate}
+        aria-current={active ? "page" : undefined}
         className={`group flex items-center gap-2.5 h-9 px-3 rounded-[var(--radius)] text-[13px] font-medium transition-all ${
           active
             ? "bg-[var(--brand)] text-[var(--brand-fg)]"
             : "text-[var(--text-2)] hover:bg-[var(--surface-2)] hover:text-[var(--text)]"
         }`}
       >
-        <item.icon size={16} className={active ? "" : "text-[var(--text-3)] group-hover:text-[var(--text-2)]"} />
+        <item.icon
+          size={16}
+          aria-hidden="true"
+          className={active ? "" : "text-[var(--text-3)] group-hover:text-[var(--text-2)]"}
+        />
         <span className="truncate flex-1">{item.title}</span>
         {item.badge && (
-          <span className={`text-[10px] font-semibold px-1.5 rounded-[var(--radius-pill)] ${
-            active ? "bg-white/15 text-white" : "bg-[var(--accent-bg)] text-[var(--accent)]"
-          }`}>
+          <span
+            className={`text-[10px] font-semibold px-1.5 rounded-[var(--radius-pill)] ${
+              active ? "bg-white/15 text-white" : "bg-[var(--accent-bg)] text-[var(--accent)]"
+            }`}
+            aria-label={`${item.badge} ${t("lang") === "fr" ? "nouveaux" : "new"}`}
+          >
             {item.badge}
           </span>
         )}
@@ -117,21 +125,37 @@ export function AppSidebar({ onNavigate }) {
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 px-3 py-4 overflow-y-auto">
-        {sections.map((section, i) => (
-          <div key={i} className={i > 0 ? "mt-6" : ""}>
-            {section.label && (
-              <div className="text-[10px] font-semibold uppercase tracking-wider text-[var(--text-4)] px-3 mb-2">
-                {section.label}
-              </div>
-            )}
-            <div className="space-y-0.5">
-              {section.items.map((item) => (
-                <NavItem key={item.url} item={item} />
-              ))}
+      <nav
+        aria-label={t("lang") === "fr" ? "Navigation principale" : "Main navigation"}
+        className="flex-1 px-3 py-4 overflow-y-auto"
+      >
+        {sections.map((section, i) => {
+          const labelId = `nav-section-${i}`;
+          return (
+            <div
+              key={i}
+              className={i > 0 ? "mt-6" : ""}
+              role={section.label ? "group" : undefined}
+              aria-labelledby={section.label ? labelId : undefined}
+            >
+              {section.label && (
+                <div
+                  id={labelId}
+                  className="text-[10px] font-semibold uppercase tracking-wider text-[var(--text-4)] px-3 mb-2"
+                >
+                  {section.label}
+                </div>
+              )}
+              <ul className="space-y-0.5 list-none">
+                {section.items.map((item) => (
+                  <li key={item.url}>
+                    <NavItem item={item} />
+                  </li>
+                ))}
+              </ul>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </nav>
 
       {/* Footer */}

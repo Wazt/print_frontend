@@ -109,38 +109,47 @@ export default function DriveListPage() {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {filtered.map((folder) => (
-            <button
+            <article
               key={folder.id}
-              onClick={() => navigate(`/drive/${folder.id}`)}
-              className="text-left p-5 bg-[var(--surface)] border border-[var(--border)] rounded-[var(--radius-lg)] hover:border-[var(--border-2)] hover:shadow-[var(--shadow-lift)] hover:-translate-y-px transition-all"
+              className="relative p-5 bg-[var(--surface)] border border-[var(--border)] rounded-[var(--radius-lg)] hover:border-[var(--border-2)] hover:shadow-[var(--shadow-lift)] hover:-translate-y-px transition-all"
             >
-              <div className="flex items-start justify-between mb-3">
-                <div className="w-10 h-10 rounded-[var(--radius)] bg-[var(--accent-bg)] flex items-center justify-center text-[var(--accent)]">
-                  <FolderOpen size={18} />
+              <button
+                type="button"
+                onClick={() => navigate(`/drive/${folder.id}`)}
+                className="text-left w-full focus-visible:outline-none focus-visible:shadow-[var(--shadow-focus)] rounded-[var(--radius)]"
+                aria-label={
+                  t("lang") === "fr"
+                    ? `Ouvrir le dossier ${folder.name}`
+                    : `Open folder ${folder.name}`
+                }
+              >
+                <div className="flex items-start justify-between mb-3">
+                  <div className="w-10 h-10 rounded-[var(--radius)] bg-[var(--accent-bg)] flex items-center justify-center text-[var(--accent)]">
+                    <FolderOpen size={18} aria-hidden="true" />
+                  </div>
+                  <ArrowRight size={15} className="text-[var(--text-3)]" aria-hidden="true" />
                 </div>
-                <ArrowRight size={15} className="text-[var(--text-3)]" />
-              </div>
-              <div className="text-[15px] font-semibold text-[var(--text)] truncate">
-                {folder.name}
-              </div>
-              <div className="text-[12px] text-[var(--text-3)] mt-1">
-                {folder.createdTime
-                  ? new Date(folder.createdTime).toLocaleDateString()
-                  : "—"}
-              </div>
+                <div className="text-[15px] font-semibold text-[var(--text)] truncate">
+                  {folder.name}
+                </div>
+                <div className="text-[12px] text-[var(--text-3)] mt-1">
+                  {folder.createdTime
+                    ? new Date(folder.createdTime).toLocaleDateString()
+                    : "—"}
+                </div>
+              </button>
               {folder.webViewLink && (
-                <div
-                  className="mt-3 pt-3 border-t border-[var(--border)] text-[11px] text-[var(--accent)] flex items-center gap-1"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    window.open(folder.webViewLink, "_blank");
-                  }}
+                <a
+                  href={folder.webViewLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-3 pt-3 border-t border-[var(--border)] text-[11px] text-[var(--accent)] flex items-center gap-1 hover:underline focus-visible:outline-none focus-visible:shadow-[var(--shadow-focus)] rounded-[var(--radius-sm)]"
                 >
-                  <ExternalLink size={11} />
+                  <ExternalLink size={11} aria-hidden="true" />
                   {t("lang") === "fr" ? "Ouvrir dans Drive" : "Open in Drive"}
-                </div>
+                </a>
               )}
-            </button>
+            </article>
           ))}
         </div>
       )}

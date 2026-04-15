@@ -83,7 +83,7 @@ export default function OrderDetails() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div className="flex items-center gap-3 min-w-0">
-          <Button variant="outline" size="icon" onClick={() => navigate(-1)} aria-label="Back">
+          <Button variant="outline" size="icon" onClick={() => navigate(-1)} aria-label={t("lang") === "fr" ? "Retour" : "Back"}>
             <ArrowLeft size={16} />
           </Button>
           <div className="min-w-0">

@@ -147,7 +147,7 @@ export default function RawMaterialsPage() {
           value={highCostCount}
           hint={t("lang") === "fr" ? ">= 100 DZD" : ">= 100 DZD"}
           icon={TrendingUp}
-          tone="warning"
+          tone={highCostCount > 0 ? "warning" : "success"}
           loading={isLoading}
         />
       </div>

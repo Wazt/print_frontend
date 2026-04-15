@@ -165,7 +165,7 @@ export default function CompanyDetailPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3">
-        <Button variant="outline" size="icon" onClick={() => navigate("/companies")}>
+        <Button variant="outline" size="icon" onClick={() => navigate("/companies")} aria-label={t("lang") === "fr" ? "Retour" : "Back"}>
           <ArrowLeft size={16} />
         </Button>
         <PageHeader
