@@ -1,0 +1,38 @@
+# CODEOWNERS — PrintFlow Frontend
+# https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-security/managing-repository-settings/about-code-owners
+#
+# Lines are evaluated top-to-bottom; the LAST matching pattern wins.
+# Anything not explicitly listed below falls through to the default owner.
+
+# ─── Default ──────────────────────────────────────────────────────────
+* @Wazt/frontend-maintainers
+
+# ─── Design system (critical — require DS review) ─────────────────────
+/src/Components/primitives/  @Wazt/design-system
+/src/styles/tokens.css       @Wazt/design-system
+/src/index.css               @Wazt/design-system
+/src/Layout.jsx              @Wazt/design-system
+/src/Components/AppSideBar.jsx      @Wazt/design-system
+/src/Components/MobileBottomNav.jsx @Wazt/design-system
+
+# ─── Tooling config (require tooling maintainer review) ───────────────
+/eslint.config.js            @Wazt/tooling
+/vite.config.js              @Wazt/tooling
+/tsconfig.json               @Wazt/tooling
+/jsconfig.json               @Wazt/tooling
+/package.json                @Wazt/tooling
+/package-lock.json           @Wazt/tooling
+
+# ─── Deployment config (require infra review) ─────────────────────────
+/vercel.json                 @Wazt/infra
+/nginx.conf                  @Wazt/infra
+/.github/workflows/          @Wazt/infra
+
+# ─── Docs (anyone can touch, but require a review) ────────────────────
+/README.md                   @Wazt/frontend-maintainers
+/CONTRIBUTING.md             @Wazt/frontend-maintainers
+/CHANGELOG.md                @Wazt/frontend-maintainers
+
+# ─── Test suite (require test maintainer review) ──────────────────────
+/src/test/primitives/        @Wazt/design-system
+/src/test/TokenContrast.test.js  @Wazt/design-system

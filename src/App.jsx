@@ -31,6 +31,7 @@ const ProductCreatePage = lazy(() => import("./Pages/Products/productCreatePage"
 const RawMaterialsPage = lazy(() => import("./Pages/Stock/stockPage"));
 const RawMaterialDetailPage = lazy(() => import("./Pages/Stock/rawMaterialDetailPage"));
 const RawMaterialCreatePage = lazy(() => import("./Pages/Stock/rawMaterialCreatePage"));
+const DesignSystem = lazy(() => import("./Pages/DesignSystem"));
 
 function PageLoader() {
   return (
@@ -48,6 +49,7 @@ function App() {
           <Suspense fallback={<PageLoader />}>
           <Routes>
             <Route path="/auth/login" element={<LoginPage />} />
+            <Route path="/design-system" element={<DesignSystem />} />
             <Route
               path="/"
               element={
