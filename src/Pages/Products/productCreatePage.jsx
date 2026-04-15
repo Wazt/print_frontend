@@ -1,30 +1,19 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-
-import { Button } from "@/Components/ui/button";
-import { Input } from "@/Components/ui/input";
-import { Label } from "@/Components/ui/label";
-
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/Components/ui/select";
-
-import { Plus, Trash } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, Package } from "lucide-react";
 import { toast } from "sonner";
-
 import { createProduct } from "@/Services/ProductsService";
 import getRawMaterials from "@/Services/StockService";
+import { useLanguage } from "@/contexts/LanguageContext";
+import {
+  PageHeader, DataCard, FormField, Input, Textarea, Select, Button,
+} from "@/Components/primitives";
 
-function ProductCreatePage() {
+export default function ProductCreatePage() {
   const navigate = useNavigate();
-
+  const { t } = useLanguage();
   const [rawMaterials, setRawMaterials] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
-
   const [form, setForm] = useState({
     name: "",
     description: "",
@@ -32,33 +21,24 @@ function ProductCreatePage() {
     raw_materials: [],
   });
 
-  /* ================= FETCH RAW MATERIALS ================= */
   useEffect(() => {
-    const fetchMaterials = async () => {
+    (async () => {
       try {
         const data = await getRawMaterials();
-        setRawMaterials(data || []);
+        setRawMaterials(Array.isArray(data) ? data : data?.[0] || []);
       } catch {
         toast.error("Failed to load raw materials");
       }
-    };
-    fetchMaterials();
+    })();
   }, []);
 
-  /* ================= FORM HELPERS ================= */
-  const updateField = (key, value) => {
-    setForm((prev) => ({ ...prev, [key]: value }));
-  };
+  const updateField = (key, value) => setForm((prev) => ({ ...prev, [key]: value }));
 
-  const addMaterial = () => {
+  const addMaterial = () =>
     setForm((prev) => ({
       ...prev,
-      raw_materials: [
-        ...prev.raw_materials,
-        { raw_material_id: "", quantity: "" },
-      ],
+      raw_materials: [...prev.raw_materials, { raw_material_id: "", quantity: "" }],
     }));
-  };
 
   const updateMaterial = (index, key, value) => {
     const updated = [...form.raw_materials];
@@ -72,13 +52,12 @@ function ProductCreatePage() {
     setForm((prev) => ({ ...prev, raw_materials: updated }));
   };
 
-  /* ================= SUBMIT ================= */
-  const handleSubmit = async () => {
+  const handleSubmit = async (e) => {
+    e?.preventDefault?.();
     if (!form.name) {
-      toast.warning("Product name is required");
+      toast.warning(t("lang") === "fr" ? "Nom requis" : "Name required");
       return;
     }
-
     setIsSubmitting(true);
     try {
       await createProduct({
@@ -90,144 +69,130 @@ function ProductCreatePage() {
           quantity: Number(m.quantity),
         })),
       });
-
-      toast.success("Product created successfully");
+      toast.success(t("lang") === "fr" ? "Produit cree !" : "Product created!");
       navigate("/products");
-    } catch (error) {
-      console.error(error);
-      toast.error("Failed to create product");
+    } catch {
+      toast.error(t("lang") === "fr" ? "Echec" : "Failed to create product");
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  /* ================= UI ================= */
   return (
-    <div className="max-w-5xl mx-auto px-6 py-8 space-y-8">
-      {/* HEADER */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-semibold tracking-tight">
-            Create Product
-          </h1>
-          <p className="text-muted-foreground">
-            Define product details and required raw materials
-          </p>
-        </div>
-
-        <Button variant="outline" onClick={() => navigate(-1)}>
-          Cancel
+    <div className="space-y-6 max-w-3xl">
+      <div className="flex items-center gap-3">
+        <Button variant="outline" size="icon" onClick={() => navigate(-1)}>
+          <ArrowLeft size={16} />
         </Button>
+        <PageHeader
+          title={t("lang") === "fr" ? "Nouveau produit" : "New product"}
+          subtitle={
+            t("lang") === "fr"
+              ? "Ajoutez un produit a votre catalogue"
+              : "Add a product to your catalog"
+          }
+          icon={Package}
+        />
       </div>
 
-      {/* FORM */}
-      <div className="bg-background border rounded-xl p-6 space-y-8">
-        {/* BASIC INFO */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <Label>Name</Label>
+      <DataCard>
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <FormField label={t("lang") === "fr" ? "Nom du produit" : "Product name"} htmlFor="name" required>
             <Input
+              id="name"
               value={form.name}
               onChange={(e) => updateField("name", e.target.value)}
-              placeholder="Business Card - Matte"
+              placeholder={t("lang") === "fr" ? "Ex: Carte de visite" : "Ex: Business card"}
             />
-          </div>
+          </FormField>
 
-          <div>
-            <Label>Base Price</Label>
+          <FormField label="Description" htmlFor="description">
+            <Textarea
+              id="description"
+              value={form.description}
+              onChange={(e) => updateField("description", e.target.value)}
+              rows={3}
+            />
+          </FormField>
+
+          <FormField
+            label={t("lang") === "fr" ? "Prix de base (DZD)" : "Base price (DZD)"}
+            htmlFor="base_price"
+            required
+          >
             <Input
+              id="base_price"
               type="number"
               step="0.01"
               value={form.base_price}
               onChange={(e) => updateField("base_price", e.target.value)}
-              placeholder="0.50"
+              placeholder="0.00"
             />
+          </FormField>
+
+          {/* Raw materials */}
+          <div className="border-t border-[var(--border)] pt-5">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-[14px] font-semibold text-[var(--text)]">
+                {t("lang") === "fr" ? "Matieres premieres" : "Raw materials"}
+              </h3>
+              <Button variant="outline" size="sm" type="button" onClick={addMaterial}>
+                <Plus size={13} />
+                {t("lang") === "fr" ? "Ajouter" : "Add"}
+              </Button>
+            </div>
+
+            <div className="space-y-3">
+              {form.raw_materials.length === 0 && (
+                <p className="text-[13px] text-[var(--text-3)] py-2">
+                  {t("lang") === "fr"
+                    ? "Aucune matiere premiere ajoutee."
+                    : "No raw materials added."}
+                </p>
+              )}
+              {form.raw_materials.map((m, i) => (
+                <div key={i} className="flex items-center gap-2">
+                  <Select
+                    className="flex-1"
+                    value={m.raw_material_id}
+                    onChange={(e) => updateMaterial(i, "raw_material_id", e.target.value)}
+                  >
+                    <option value="">{t("lang") === "fr" ? "Selectionner..." : "Select..."}</option>
+                    {rawMaterials.map((rm) => (
+                      <option key={rm.id} value={rm.id}>{rm.name}</option>
+                    ))}
+                  </Select>
+                  <Input
+                    type="number"
+                    placeholder={t("lang") === "fr" ? "Quantite" : "Qty"}
+                    className="w-32"
+                    value={m.quantity}
+                    onChange={(e) => updateMaterial(i, "quantity", e.target.value)}
+                  />
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    type="button"
+                    onClick={() => removeMaterial(i)}
+                  >
+                    <Trash2 size={14} className="text-[var(--danger)]" />
+                  </Button>
+                </div>
+              ))}
+            </div>
           </div>
 
-          <div className="md:col-span-2">
-            <Label>Description</Label>
-            <textarea
-              className="w-full min-h-[100px] rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
-              placeholder="300gsm premium card"
-              value={form.description}
-              onChange={(e) => updateField("description", e.target.value)}
-            />
-          </div>
-        </div>
-
-        {/* RAW MATERIALS */}
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-medium">Raw Materials</h3>
-            <Button size="sm" variant="outline" onClick={addMaterial}>
-              <Plus className="w-4 h-4 mr-1" />
-              Add Material
+          <div className="flex items-center justify-end gap-2 pt-2">
+            <Button variant="outline" type="button" onClick={() => navigate(-1)}>
+              {t("common.cancel")}
+            </Button>
+            <Button variant="accent" type="submit" loading={isSubmitting}>
+              <Plus size={15} />
+              {t("lang") === "fr" ? "Creer le produit" : "Create product"}
             </Button>
           </div>
-
-          {form.raw_materials.length === 0 && (
-            <p className="text-sm text-muted-foreground">
-              No raw materials added yet.
-            </p>
-          )}
-
-          <div className="space-y-3">
-            {form.raw_materials.map((material, index) => (
-              <div
-                key={index}
-                className="grid grid-cols-[1fr_120px_40px] gap-2 items-end"
-              >
-                <Select
-                  value={material.raw_material_id}
-                  onValueChange={(value) =>
-                    updateMaterial(index, "raw_material_id", value)
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select material" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {rawMaterials.map((rm) => (
-                      <SelectItem key={rm.id} value={rm.id}>
-                        {rm.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-
-                <Input
-                  type="number"
-                  placeholder="Qty"
-                  value={material.quantity}
-                  onChange={(e) =>
-                    updateMaterial(index, "quantity", e.target.value)
-                  }
-                />
-
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  onClick={() => removeMaterial(index)}
-                >
-                  <Trash className="w-4 h-4 text-muted-foreground" />
-                </Button>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* ACTIONS */}
-        <div className="flex justify-end gap-3 pt-4 border-t">
-          <Button variant="outline" onClick={() => navigate(-1)}>
-            Cancel
-          </Button>
-          <Button onClick={handleSubmit} disabled={isSubmitting}>
-            {isSubmitting ? "Creating..." : "Create Product"}
-          </Button>
-        </div>
-      </div>
+        </form>
+      </DataCard>
     </div>
   );
 }
-
-export default ProductCreatePage;

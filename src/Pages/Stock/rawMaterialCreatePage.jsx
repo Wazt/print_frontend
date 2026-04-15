@@ -1,104 +1,107 @@
-// RawMaterialCreatePage.jsx
-import React, { useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Input } from "@/Components/ui/input";
-import { Button } from "@/Components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/Components/ui/card";
+import { ArrowLeft, Plus, Boxes } from "lucide-react";
 import { toast } from "sonner";
 import { createRawMaterial } from "@/Services/StockService";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { PageHeader, DataCard, FormField, Input, Button } from "@/Components/primitives";
 
-function RawMaterialCreatePage() {
+export default function RawMaterialCreatePage() {
   const navigate = useNavigate();
-  const [name, setName] = useState("");
-  const [stockQuantity, setStockQuantity] = useState("");
-  const [costPerUnit, setCostPerUnit] = useState("");
+  const { t } = useLanguage();
+  const [form, setForm] = useState({ name: "", stock_quantity: "", cost_per_unit: "" });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    if (!name || !stockQuantity || !costPerUnit) {
-      toast.error("Please fill all fields");
+    if (!form.name || !form.stock_quantity || !form.cost_per_unit) {
+      toast.error(t("lang") === "fr" ? "Tous les champs sont requis" : "All fields required");
       return;
     }
-
     setIsSubmitting(true);
     try {
       await createRawMaterial({
-        name,
-        stock_quantity: parseFloat(stockQuantity),
-        cost_per_unit: parseFloat(costPerUnit),
+        name: form.name,
+        stock_quantity: parseFloat(form.stock_quantity),
+        cost_per_unit: parseFloat(form.cost_per_unit),
       });
-      toast.success("Raw material created successfully");
+      toast.success(t("lang") === "fr" ? "Materiel cree !" : "Material created!");
       navigate("/stock");
-    } catch (error) {
-      console.error(error);
-      toast.error("Failed to create raw material");
+    } catch {
+      toast.error(t("lang") === "fr" ? "Echec" : "Failed");
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="max-w-3xl mx-auto p-6">
-      <Card className="shadow-lg rounded-xl border border-gray-100">
-        <CardHeader>
-          <CardTitle className="text-2xl font-bold">Add New Raw Material</CardTitle>
-          <CardDescription className="text-gray-500">
-            Fill in the details to add a new raw material.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form className="space-y-6" onSubmit={handleSubmit}>
-            <div>
-              <label className="block mb-1 font-medium text-gray-700">Name</label>
-              <Input
-                placeholder="Material name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-              />
-            </div>
+    <div className="space-y-6 max-w-3xl">
+      <div className="flex items-center gap-3">
+        <Button variant="outline" size="icon" onClick={() => navigate(-1)}>
+          <ArrowLeft size={16} />
+        </Button>
+        <PageHeader
+          title={t("lang") === "fr" ? "Nouveau materiel" : "New material"}
+          subtitle={
+            t("lang") === "fr" ? "Ajoutez une matiere premiere" : "Add a raw material"
+          }
+          icon={Boxes}
+        />
+      </div>
 
-            <div>
-              <label className="block mb-1 font-medium text-gray-700">Stock Quantity</label>
+      <DataCard>
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <FormField label={t("lang") === "fr" ? "Nom" : "Name"} htmlFor="name" required>
+            <Input
+              id="name"
+              value={form.name}
+              onChange={(e) => setForm({ ...form, name: e.target.value })}
+              placeholder={t("lang") === "fr" ? "Ex: Papier couche 170g" : "Ex: Coated paper 170g"}
+            />
+          </FormField>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <FormField
+              label={t("lang") === "fr" ? "Quantite en stock" : "Stock quantity"}
+              htmlFor="stock_quantity"
+              required
+            >
               <Input
+                id="stock_quantity"
                 type="number"
-                placeholder="e.g. 100"
-                value={stockQuantity}
-                onChange={(e) => setStockQuantity(e.target.value)}
-                required
+                step="0.01"
+                value={form.stock_quantity}
+                onChange={(e) => setForm({ ...form, stock_quantity: e.target.value })}
+                placeholder="100"
               />
-            </div>
-
-            <div>
-              <label className="block mb-1 font-medium text-gray-700">Cost per Unit</label>
+            </FormField>
+            <FormField
+              label={t("lang") === "fr" ? "Cout unitaire (DZD)" : "Cost per unit (DZD)"}
+              htmlFor="cost_per_unit"
+              required
+            >
               <Input
+                id="cost_per_unit"
                 type="number"
-                placeholder="e.g. 200"
-                value={costPerUnit}
-                onChange={(e) => setCostPerUnit(e.target.value)}
-                required
+                step="0.01"
+                value={form.cost_per_unit}
+                onChange={(e) => setForm({ ...form, cost_per_unit: e.target.value })}
+                placeholder="200"
               />
-            </div>
+            </FormField>
+          </div>
 
-            <div className="flex justify-end gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => navigate("/stock")}
-              >
-                Cancel
-              </Button>
-              <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? "Saving..." : "Create Material"}
-              </Button>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
+          <div className="flex items-center justify-end gap-2 pt-2">
+            <Button variant="outline" type="button" onClick={() => navigate("/stock")}>
+              {t("common.cancel")}
+            </Button>
+            <Button variant="accent" type="submit" loading={isSubmitting}>
+              <Plus size={15} />
+              {t("lang") === "fr" ? "Creer le materiel" : "Create material"}
+            </Button>
+          </div>
+        </form>
+      </DataCard>
     </div>
   );
 }
-
-export default RawMaterialCreatePage;

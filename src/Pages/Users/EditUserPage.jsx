@@ -1,158 +1,170 @@
-import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { getUserDetails, updateUser, AdminchangeUserPassword } from '@/Services/UsersService';
-import { Input } from '@/Components/ui/input';
-import { Button } from '@/Components/ui/button';
-import { Mail, Phone, User, Shield, Ban, Lock } from 'lucide-react';
+import { useEffect, useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { ArrowLeft, Edit2 } from "lucide-react";
+import { getUserDetails, updateUser, AdminchangeUserPassword } from "@/Services/UsersService";
+import { toast } from "sonner";
+import { useLanguage } from "@/contexts/LanguageContext";
+import {
+  PageHeader, DataCard, FormField, Input, Select, Button,
+} from "@/Components/primitives";
 
 export default function EditUserPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [formData, setFormData] = useState({
-    username: '',
-    email: '',
-    phone_number: '',
-    role: '',
-    new_password: '',
-    confirm_password: '',
+    username: "",
+    email: "",
+    phone_number: "",
+    role: "",
+    new_password: "",
+    confirm_password: "",
   });
-  const [error, setError] = useState('');
-
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    const fetchUser = async () => {
-      const data = await getUserDetails(id);
-      setFormData({
-        username: data.data.response.username || '',
-        email: data.data.response.email || '',
-        phone_number: data.data.response.phone_number || '',
-        role: data.data.response.role || '',
-        new_password: '',
-        confirm_password: ''
-      });
-    };
-    fetchUser();
+    (async () => {
+      try {
+        const data = await getUserDetails(id);
+        const user = data?.data?.response || data;
+        setFormData({
+          username: user.username || "",
+          email: user.email || "",
+          phone_number: user.phone_number || "",
+          role: user.role || "",
+          new_password: "",
+          confirm_password: "",
+        });
+      } catch {
+        toast.error("Failed to load user");
+      }
+    })();
   }, [id]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
-
-    // 1. Update user info via PATCH
-    const patchPayload = { ...formData };
-
+    setIsLoading(true);
     try {
-      await updateUser(id, patchPayload);
-    } catch (err) {
-      setError('Failed to update user data.');
-      return;
-    }
-
-    // 2. Handle password change if both fields are filled
-    if (formData.new_password || formData.confirm_password) {
-  
-      if (formData.new_password !== formData.confirm_password) {
-        setError('Passwords do not match.');
-        return;
-      }
-
-      try {
+      await updateUser(id, formData);
+      if (formData.new_password || formData.confirm_password) {
+        if (formData.new_password !== formData.confirm_password) {
+          toast.error(t("lang") === "fr" ? "Mots de passe differents" : "Passwords do not match");
+          setIsLoading(false);
+          return;
+        }
         await AdminchangeUserPassword(id, {
           new_password: formData.new_password,
           new_password2: formData.confirm_password,
         });
-      } catch (err) {
-        setError('Failed to change password.');
-        return;
       }
+      toast.success(t("lang") === "fr" ? "Utilisateur mis a jour" : "User updated");
+      navigate(`/users/${id}`);
+    } catch {
+      toast.error(t("lang") === "fr" ? "Echec de la mise a jour" : "Update failed");
+    } finally {
+      setIsLoading(false);
     }
-
-    navigate(`/users/${id}`);
   };
 
   return (
-    <div className="p-6 max-w-md mx-auto bg-white rounded-xl shadow-md space-y-6">
-      <h2 className="text-xl font-semibold text-center">Edit User Info</h2>
+    <div className="space-y-6 max-w-3xl">
+      <div className="flex items-center gap-3">
+        <Button variant="outline" size="icon" onClick={() => navigate(-1)}>
+          <ArrowLeft size={16} />
+        </Button>
+        <PageHeader
+          title={t("lang") === "fr" ? "Modifier l'utilisateur" : "Edit user"}
+          subtitle={formData.username}
+          icon={Edit2}
+        />
+      </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <DataCard>
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <FormField label={t("lang") === "fr" ? "Nom d'utilisateur" : "Username"} htmlFor="username">
+              <Input id="username" name="username" value={formData.username} onChange={handleChange} />
+            </FormField>
+            <FormField label="Email" htmlFor="email">
+              <Input
+                id="email"
+                name="email"
+                type="email"
+                value={formData.email}
+                onChange={handleChange}
+              />
+            </FormField>
+          </div>
 
-        <div className="flex items-center gap-3">
-          <User className="w-5 h-5 text-muted-foreground" />
-          <Input
-            name="username"
-            value={formData.username}
-            onChange={handleChange}
-            placeholder="Username"
-          />
-        </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <FormField
+              label={t("lang") === "fr" ? "Telephone" : "Phone"}
+              htmlFor="phone_number"
+            >
+              <Input
+                id="phone_number"
+                name="phone_number"
+                value={formData.phone_number}
+                onChange={handleChange}
+              />
+            </FormField>
+            <FormField label="Role" htmlFor="role">
+              <Select id="role" name="role" value={formData.role} onChange={handleChange}>
+                <option value="">{t("lang") === "fr" ? "Selectionner..." : "Select..."}</option>
+                <option value="ADMIN">Admin</option>
+                <option value="USER">User</option>
+                <option value="CLIENT">Client</option>
+              </Select>
+            </FormField>
+          </div>
 
-        <div className="flex items-center gap-3">
-          <Mail className="w-5 h-5 text-muted-foreground" />
-          <Input
-            name="email"
-            value={formData.email}
-            onChange={handleChange}
-            placeholder="Email"
-          />
-        </div>
+          <div className="pt-4 border-t border-[var(--border)]">
+            <h3 className="text-[14px] font-semibold text-[var(--text)] mb-3">
+              {t("lang") === "fr" ? "Changer le mot de passe (optionnel)" : "Change password (optional)"}
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <FormField
+                label={t("lang") === "fr" ? "Nouveau mot de passe" : "New password"}
+                htmlFor="new_password"
+              >
+                <Input
+                  id="new_password"
+                  name="new_password"
+                  type="password"
+                  value={formData.new_password}
+                  onChange={handleChange}
+                />
+              </FormField>
+              <FormField
+                label={t("lang") === "fr" ? "Confirmer" : "Confirm"}
+                htmlFor="confirm_password"
+              >
+                <Input
+                  id="confirm_password"
+                  name="confirm_password"
+                  type="password"
+                  value={formData.confirm_password}
+                  onChange={handleChange}
+                />
+              </FormField>
+            </div>
+          </div>
 
-        <div className="flex items-center gap-3">
-          <Phone className="w-5 h-5 text-muted-foreground" />
-          <Input
-            name="phone_number"
-            value={formData.phone_number}
-            onChange={handleChange}
-            placeholder="Phone Number"
-          />
-        </div>
-
-        <div className="flex items-center gap-3">
-          <Shield className="w-5 h-5 text-muted-foreground" />
-          <select
-            name="role"
-            value={formData.role}
-            onChange={handleChange}
-            className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-          >
-            <option value="">Select Role</option>
-            <option value="admin">Admin</option>
-            <option value="operator">Staff</option>
-            <option value="client">Client</option>
-          </select>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <Lock className="w-5 h-5 text-muted-foreground" />
-          <Input
-            type="password"
-            name="new_password"
-            value={formData.new_password}
-            onChange={handleChange}
-            placeholder="New Password"
-          />
-        </div>
-
-        {/* 🔒 Confirm Password */}
-        <div className="flex items-center gap-3">
-          <Lock className="w-5 h-5 text-muted-foreground" />
-          <Input
-            type="password"
-            name="confirm_password"
-            value={formData.confirm_password}
-            onChange={handleChange}
-            placeholder="Confirm New Password"
-          />
-        </div>
-
-        <div className="pt-4">
-          <Button type="submit" className="w-full">Save Changes</Button>
-        </div>
-      </form>
+          <div className="flex items-center justify-end gap-2 pt-2">
+            <Button variant="outline" type="button" onClick={() => navigate(-1)}>
+              {t("common.cancel")}
+            </Button>
+            <Button variant="accent" type="submit" loading={isLoading}>
+              {t("common.save")}
+            </Button>
+          </div>
+        </form>
+      </DataCard>
     </div>
   );
 }

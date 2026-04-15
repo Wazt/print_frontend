@@ -1,29 +1,26 @@
-import React, { useState } from "react";
-import { Check, Building2, Mail, Phone, MapPin } from "lucide-react";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { Building2, ArrowLeft } from "lucide-react";
 import { createCompany } from "@/Services/CompanyService";
-import { Button } from "@/Components/ui/button";
 import { toast } from "sonner";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { PageHeader, DataCard, FormField, Input, Textarea, Button } from "@/Components/primitives";
 
-function CreateCompany() {
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    address: "",
-  });
-
+export default function CreateCompany() {
+  const navigate = useNavigate();
+  const { t } = useLanguage();
+  const [formData, setFormData] = useState({ name: "", email: "", phone: "", address: "" });
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const validateForm = () => {
-    const newErrors = {};
-    if (!formData.name.trim()) newErrors.name = "Company name is required";
-    if (!formData.email.trim()) newErrors.email = "Email is required";
-    else if (!/\S+@\S+\.\S+/.test(formData.email))
-      newErrors.email = "Invalid email address";
-    if (!formData.phone.trim()) newErrors.phone = "Phone number is required";
-    if (!formData.address.trim()) newErrors.address = "Address is required";
-    return newErrors;
+  const validate = () => {
+    const e = {};
+    if (!formData.name.trim()) e.name = t("lang") === "fr" ? "Nom requis" : "Name required";
+    if (!formData.email.trim()) e.email = "Email requis";
+    else if (!/\S+@\S+\.\S+/.test(formData.email)) e.email = "Email invalide";
+    if (!formData.phone.trim()) e.phone = t("lang") === "fr" ? "Telephone requis" : "Phone required";
+    if (!formData.address.trim()) e.address = t("lang") === "fr" ? "Adresse requise" : "Address required";
+    return e;
   };
 
   const handleChange = (e) => {
@@ -32,141 +29,109 @@ function CreateCompany() {
     if (errors[name]) setErrors({ ...errors, [name]: "" });
   };
 
-  const handleSubmit = async () => {
-    const validationErrors = validateForm();
+  const handleSubmit = async (e) => {
+    e?.preventDefault?.();
+    const validationErrors = validate();
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
       return;
     }
-
     setIsSubmitting(true);
-
     try {
       await createCompany(formData);
-      toast.success("Company created successfully!");
-      setFormData({ name: "", email: "", phone: "", address: "" });
-    } catch (error) {
-      console.error(error);
-      toast.error("Failed to create company.");
+      toast.success(t("lang") === "fr" ? "Entreprise creee !" : "Company created!");
+      navigate("/companies");
+    } catch {
+      toast.error(t("lang") === "fr" ? "Echec de la creation" : "Failed to create company");
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-6">
-      <div className="max-w-4xl mx-auto px-6">
-        {/* Header */}
-        <div className="flex items-center gap-4 mb-6">
-          <div className="inline-flex items-center justify-center w-10 h-10 bg-black rounded-xl">
-            <Building2 className="w-5 h-5 text-white" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Add New Company</h1>
-            <p className="text-gray-500 text-sm">
-              Fill in the details below to register a new company
-            </p>
-          </div>
-        </div>
+    <div className="space-y-6 max-w-3xl">
+      <div className="flex items-center gap-3">
+        <Button variant="outline" size="icon" onClick={() => navigate(-1)}>
+          <ArrowLeft size={16} />
+        </Button>
+        <PageHeader
+          title={t("lang") === "fr" ? "Nouvelle entreprise" : "New company"}
+          subtitle={t("lang") === "fr" ? "Ajoutez une entreprise partenaire" : "Add a partner company"}
+          icon={Building2}
+        />
+      </div>
 
-        {/* Form Card */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 space-y-4">
-          {/* Company Name */}
-          <div>
-            <label className="flex items-center gap-2 text-gray-700 font-medium mb-1">
-              <Building2 className="w-4 h-4 text-gray-600" />
-              Company Name
-            </label>
-            <input
-              type="text"
+      <DataCard>
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <FormField
+            label={t("lang") === "fr" ? "Nom de l'entreprise" : "Company name"}
+            htmlFor="name"
+            error={errors.name}
+            required
+          >
+            <Input
+              id="name"
               name="name"
-              placeholder="Enter company name"
               value={formData.name}
               onChange={handleChange}
-              className={`w-full px-3 py-2 rounded-lg border ${
-                errors.name ? "border-red-400 bg-red-50" : "border-gray-300"
-              } focus:ring-1 focus:ring-black focus:border-transparent transition`}
+              placeholder={t("lang") === "fr" ? "Ex: Lab Perfect" : "Ex: Lab Perfect"}
             />
-            {errors.name && (
-              <p className="mt-1 text-xs text-red-600">{errors.name}</p>
-            )}
-          </div>
+          </FormField>
 
-          {/* Email and Phone */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="flex items-center gap-2 text-gray-700 font-medium mb-1">
-                <Mail className="w-4 h-4 text-gray-600" />
-                Email
-              </label>
-              <input
-                type="email"
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <FormField label="Email" htmlFor="email" error={errors.email} required>
+              <Input
+                id="email"
                 name="email"
-                placeholder="company@example.com"
+                type="email"
                 value={formData.email}
                 onChange={handleChange}
-                className={`w-full px-3 py-2 rounded-lg border ${
-                  errors.email ? "border-red-400 bg-red-50" : "border-gray-300"
-                } focus:ring-1 focus:ring-black focus:border-transparent transition`}
+                placeholder="contact@example.com"
               />
-              {errors.email && (
-                <p className="mt-1 text-xs text-red-600">{errors.email}</p>
-              )}
-            </div>
-
-            <div>
-              <label className="flex items-center gap-2 text-gray-700 font-medium mb-1">
-                <Phone className="w-4 h-4 text-gray-600" />
-                Phone
-              </label>
-              <input
-                type="tel"
+            </FormField>
+            <FormField
+              label={t("lang") === "fr" ? "Telephone" : "Phone"}
+              htmlFor="phone"
+              error={errors.phone}
+              required
+            >
+              <Input
+                id="phone"
                 name="phone"
-                placeholder="+1 (555) 000-0000"
+                type="tel"
                 value={formData.phone}
                 onChange={handleChange}
-                className={`w-full px-3 py-2 rounded-lg border ${
-                  errors.phone ? "border-red-400 bg-red-50" : "border-gray-300"
-                } focus:ring-1 focus:ring-black focus:border-transparent transition`}
+                placeholder="+213 555 00 00 00"
               />
-              {errors.phone && (
-                <p className="mt-1 text-xs text-red-600">{errors.phone}</p>
-              )}
-            </div>
+            </FormField>
           </div>
 
-          {/* Address */}
-          <div>
-            <label className="flex items-center gap-2 text-gray-700 font-medium mb-1">
-              <MapPin className="w-4 h-4 text-gray-600" />
-              Address
-            </label>
-            <textarea
+          <FormField
+            label={t("lang") === "fr" ? "Adresse" : "Address"}
+            htmlFor="address"
+            error={errors.address}
+            required
+          >
+            <Textarea
+              id="address"
               name="address"
               rows={3}
-              placeholder="Enter full business address"
               value={formData.address}
               onChange={handleChange}
-              className={`w-full px-3 py-2 rounded-lg border ${
-                errors.address ? "border-red-400 bg-red-50" : "border-gray-300"
-              } focus:ring-1 focus:ring-black focus:border-transparent transition resize-none`}
+              placeholder={t("lang") === "fr" ? "Adresse complete" : "Full business address"}
             />
-            {errors.address && (
-              <p className="mt-1 text-xs text-red-600">{errors.address}</p>
-            )}
-          </div>
+          </FormField>
 
-          <Button
-            className="w-full py-3 rounded-lg bg-black text-white font-semibold hover:bg-gray-800 transition"
-            onClick={handleSubmit}
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? "Creating..." : "Create Company"}
-          </Button>
-        </div>
-      </div>
+          <div className="flex items-center justify-end gap-2 pt-2">
+            <Button variant="outline" type="button" onClick={() => navigate(-1)}>
+              {t("common.cancel")}
+            </Button>
+            <Button variant="accent" type="submit" loading={isSubmitting}>
+              {t("lang") === "fr" ? "Creer l'entreprise" : "Create company"}
+            </Button>
+          </div>
+        </form>
+      </DataCard>
     </div>
   );
 }
-
-export default CreateCompany;

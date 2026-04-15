@@ -1,97 +1,162 @@
-import { Printer } from "lucide-react"
-import { LoginForm } from "@/Components/login-form"
-import { Toaster } from "sonner"
+import { useContext, useState } from "react";
+import { Printer, Loader2, Eye, EyeOff, Lock, Mail, ArrowRight, CheckCircle2 } from "lucide-react";
+import { Toaster } from "sonner";
+import AuthContext from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
+import LanguageSwitcher from "@/Components/LanguageSwitcher";
+import { Button, FormField, Input } from "@/Components/primitives";
 
 export default function LoginPage() {
+  const { login, isLoading } = useContext(AuthContext);
+  const { t } = useLanguage();
+  const [showPassword, setShowPassword] = useState(false);
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
-      {/* Navigation Bar */}
-      <nav className="absolute top-0 left-0 right-0 z-10 px-6 py-4">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-lg bg-slate-900 flex items-center justify-center">
-              <Printer className="h-4 w-4 text-white" />
-            </div>
-            <span className="text-xl font-semibold text-slate-900">PrintFlow</span>
+    <div className="min-h-screen bg-[var(--bg)] flex">
+      {/* Left — branding (always dark) */}
+      <div className="hidden lg:flex lg:w-1/2 bg-[#0F172A] text-white flex-col p-10 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-[#0F172A] via-[#1E293B] to-[#0F172A]" />
+        <div className="absolute -top-32 -right-32 w-96 h-96 rounded-full bg-sky-500/10 blur-3xl" />
+        <div className="absolute -bottom-32 -left-32 w-96 h-96 rounded-full bg-sky-500/5 blur-3xl" />
+
+        <div className="relative flex items-center gap-2.5">
+          <div className="w-9 h-9 rounded-[var(--radius)] bg-sky-500 flex items-center justify-center">
+            <Printer size={18} className="text-white" />
           </div>
-          <div className="text-sm text-slate-600">
-            Need help? <a href="#" className="text-slate-900 font-medium hover:underline">Contact Support</a>
+          <span className="text-xl font-semibold tracking-tight text-white">PrintFlow</span>
+        </div>
+
+        <div className="relative mt-auto max-w-md">
+          <h1 className="text-4xl font-semibold tracking-tight leading-tight mb-4">
+            {t("lang") === "fr"
+              ? "Gerez vos commandes d'impression avec precision."
+              : "Manage print orders with precision."}
+          </h1>
+          <p className="text-[15px] text-white/60 leading-relaxed mb-8">
+            {t("lang") === "fr"
+              ? "Suivi temps reel, validation BAT, gestion des stocks et facturation — tout dans une plateforme unifiee."
+              : "Real-time tracking, proof approval, inventory management and invoicing — all in one unified platform."}
+          </p>
+
+          <div className="space-y-3">
+            {[
+              t("lang") === "fr" ? "Suivi de production en temps reel" : "Real-time production tracking",
+              t("lang") === "fr" ? "Gestion clients & commandes centralisee" : "Centralized client & order management",
+              t("lang") === "fr" ? "Facturation & paiements integres" : "Built-in invoicing & payments",
+            ].map((feat) => (
+              <div key={feat} className="flex items-center gap-2.5 text-[14px] text-white/80">
+                <CheckCircle2 size={16} className="text-sky-400 flex-shrink-0" />
+                {feat}
+              </div>
+            ))}
           </div>
         </div>
-      </nav>
 
-      {/* Main Content */}
-      <div className="min-h-screen flex items-center justify-center px-4 pt-20 pb-12">
-        <div className="w-full max-w-6xl grid lg:grid-cols-2 gap-12 items-center">
-          {/* Left Side - Marketing Content */}
-          <div className="hidden lg:block">
-            <div className="max-w-lg">
-              <h1 className="text-4xl font-bold text-slate-900 mb-6">
-                Manage print orders with precision
-              </h1>
-              <p className="text-lg text-slate-600 mb-8">
-                Streamline your workflow, track production in real-time, and deliver exceptional results to your clients.
-              </p>
-              
-              {/* Features */}
-              <div className="space-y-4">
-                <div className="flex items-start gap-3">
-                  <div className="mt-1 h-5 w-5 rounded-full bg-slate-900 flex items-center justify-center flex-shrink-0">
-                    <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                    </svg>
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-slate-900">Real-time Order Tracking</h3>
-                    <p className="text-sm text-slate-600">Monitor every order from submission to delivery</p>
-                  </div>
-                </div>
-                
-                <div className="flex items-start gap-3">
-                  <div className="mt-1 h-5 w-5 rounded-full bg-slate-900 flex items-center justify-center flex-shrink-0">
-                    <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                    </svg>
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-slate-900">Automated Workflows</h3>
-                    <p className="text-sm text-slate-600">Save time with intelligent automation</p>
-                  </div>
-                </div>
-                
-                <div className="flex items-start gap-3">
-                  <div className="mt-1 h-5 w-5 rounded-full bg-slate-900 flex items-center justify-center flex-shrink-0">
-                    <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                    </svg>
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-slate-900">Team Collaboration</h3>
-                    <p className="text-sm text-slate-600">Keep everyone aligned with shared dashboards</p>
-                  </div>
-                </div>
-              </div>
+        <div className="relative text-[12px] text-white/40 mt-10">
+          © 2026 PrintFlow · Built by Axentis
+        </div>
+      </div>
 
-              {/* Brought to you by */}
-              <div className="mt-12 pt-8 border-t border-slate-200">
-                <p className="text-sm text-slate-600">
-                  Brought to you by <span className="font-semibold text-slate-900">Axentis</span>
-                </p>
-                <p className="text-sm text-slate-500 mt-2">
-                  Contact: <a href="tel:0778185928" className="text-slate-700 hover:text-slate-900 font-medium">0778 18 59 28</a>
-                </p>
-              </div>
+      {/* Right — form */}
+      <div className="flex-1 flex flex-col">
+        <header className="flex items-center justify-between p-6">
+          <div className="lg:hidden flex items-center gap-2">
+            <div className="w-8 h-8 rounded-[var(--radius)] bg-[var(--brand)] flex items-center justify-center">
+              <Printer size={16} className="text-[var(--brand-fg)]" />
             </div>
+            <span className="font-semibold text-[var(--text)]">PrintFlow</span>
           </div>
+          <div className="ml-auto flex items-center gap-2">
+            <LanguageSwitcher />
+          </div>
+        </header>
 
-          {/* Right Side - Login Form */}
-          <div className="w-full max-w-md mx-auto lg:mx-0">
-            <LoginForm />
+        <div className="flex-1 flex items-center justify-center p-6">
+          <div className="w-full max-w-md">
+            <div className="mb-8">
+              <h2 className="text-3xl font-semibold text-[var(--text)] tracking-tight">
+                {t("lang") === "fr" ? "Bienvenue" : "Welcome back"}
+              </h2>
+              <p className="mt-2 text-[14px] text-[var(--text-3)]">
+                {t("lang") === "fr"
+                  ? "Connectez-vous pour acceder a votre tableau de bord"
+                  : "Sign in to access your dashboard"}
+              </p>
+            </div>
+
+            <form onSubmit={login} className="space-y-5">
+              <FormField
+                label={t("lang") === "fr" ? "Adresse email" : "Email address"}
+                htmlFor="email"
+              >
+                <div className="relative">
+                  <Mail size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-4)]" />
+                  <Input
+                    id="email"
+                    name="email"
+                    type="email"
+                    placeholder="you@company.com"
+                    required
+                    className="pl-9 w-full"
+                  />
+                </div>
+              </FormField>
+
+              <FormField
+                label={t("lang") === "fr" ? "Mot de passe" : "Password"}
+                htmlFor="password"
+              >
+                <div className="relative">
+                  <Lock size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-4)]" />
+                  <Input
+                    id="password"
+                    name="password"
+                    type={showPassword ? "text" : "password"}
+                    required
+                    className="pl-9 pr-10 w-full"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-4)] hover:text-[var(--text-2)]"
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                  >
+                    {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
+                  </button>
+                </div>
+              </FormField>
+
+              <div className="flex items-center justify-between">
+                <label className="flex items-center gap-2 text-[13px] text-[var(--text-2)] cursor-pointer">
+                  <input type="checkbox" className="h-4 w-4 rounded border-[var(--border-2)] accent-[var(--accent)]" />
+                  {t("lang") === "fr" ? "Rester connecte" : "Keep me signed in"}
+                </label>
+                <a href="#" className="text-[13px] font-medium text-sky-400 hover:underline">
+                  {t("lang") === "fr" ? "Mot de passe oublie ?" : "Forgot password?"}
+                </a>
+              </div>
+
+              <Button type="submit" variant="accent" size="lg" loading={isLoading} className="w-full">
+                {isLoading
+                  ? (t("lang") === "fr" ? "Connexion..." : "Signing in...")
+                  : (
+                    <>
+                      {t("lang") === "fr" ? "Se connecter" : "Sign in"}
+                      <ArrowRight size={16} />
+                    </>
+                  )}
+              </Button>
+            </form>
+
+            <div className="mt-8 flex items-center justify-center gap-2 text-[12px] text-[var(--text-4)]">
+              <Lock size={12} />
+              {t("lang") === "fr" ? "Vos donnees sont securisees" : "Your data is secure and encrypted"}
+            </div>
           </div>
         </div>
       </div>
 
-      <Toaster />
+      <Toaster position="top-right" />
     </div>
-  )
+  );
 }
