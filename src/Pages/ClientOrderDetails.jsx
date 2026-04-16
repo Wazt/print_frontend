@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { Check, Upload, Search, Printer, Truck, FileText, CheckCircle2, ArrowRight, ExternalLink, Bell } from "lucide-react";
@@ -35,66 +35,190 @@ function StatusPill({ step, label }) {
   );
 }
 
-function Stepper({ current, steps }) {
-  const [lineWidth, setLineWidth] = useState(0);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      const pct = (current / (steps.length - 1)) * 100;
-      setLineWidth(pct);
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [current, steps.length]);
+function Stepper({ current, steps, onStepClick, t }) {
+  const isFr = t("lang") === "fr";
+  const total = steps.length;
+  const percentage = Math.round(((current + 1) / total) * 100);
+  const currentStage = steps[current];
+  const CurrentIcon = currentStage?.icon;
+  const clickable = typeof onStepClick === "function";
 
   return (
-    <div className="relative flex justify-between px-1 py-6">
-      {/* Track lines */}
-      <div className="absolute top-[43px] left-0 right-0 h-[2px] z-0">
-        <div
-          className="absolute h-[2px] rounded-[1px] bg-[var(--step-pending-bg)]"
-          style={{ left: "calc(100% / 14)", right: "calc(100% / 14)" }}
-        />
-        <div
-          className="absolute h-[2px] rounded-[1px] transition-[width] duration-[800ms] ease-[cubic-bezier(0.4,0,0.2,1)]"
-          style={{
-            left: "calc(100% / 14)",
-            width: `${lineWidth * (6 / 7)}%`,
-            background: "linear-gradient(90deg, var(--step-done-line), var(--step-active-line))",
-          }}
-        />
-      </div>
-
-      {steps.map((step, i) => {
-        const isDone = i < current;
-        const isActive = i === current;
-
-        return (
-          <div key={step.key} className="flex-1 flex flex-col items-center relative z-[1] min-w-0">
-            <div
-              className={`w-[38px] h-[38px] rounded-full flex items-center justify-center text-[13px] font-medium transition-all duration-[400ms] ease-[cubic-bezier(0.4,0,0.2,1)] ${
-                isDone
-                  ? "bg-[var(--step-done)] text-white"
-                  : isActive
-                  ? "bg-[var(--step-active)] text-white shadow-[0_0_0_5px_var(--step-active-bg)]"
-                  : "bg-[var(--step-pending-bg)] text-[var(--step-pending)] border-[1.5px] border-[var(--step-pending)]"
-              }`}
-            >
-              {isDone ? <Check size={17} strokeWidth={2.5} /> : i + 1}
-            </div>
-            <span
-              className={`mt-[10px] text-[11.5px] text-center leading-tight max-w-[74px] ${
-                isDone
-                  ? "text-[var(--step-done)] font-medium"
-                  : isActive
-                  ? "text-[var(--step-active)] font-medium"
-                  : "text-[var(--ob-txd)] font-normal"
-              }`}
-            >
-              {step.label}
+    <div className="py-2">
+      {/* Top stats: step count + current label */}
+      <div className="flex items-end justify-between mb-4 gap-4">
+        <div className="min-w-0">
+          <div className="text-[10px] uppercase tracking-[0.08em] text-[var(--ob-txd)] font-semibold">
+            {isFr ? "Etape" : "Step"}
+          </div>
+          <div className="flex items-baseline gap-2 mt-1">
+            <span className="text-[26px] font-bold text-[var(--ob-tx)] tabular-nums leading-none font-['Fraunces']">
+              {current + 1}
+            </span>
+            <span className="text-[14px] text-[var(--ob-txd)] tabular-nums">
+              / {total}
+            </span>
+            <span className="text-[11px] text-[var(--ob-txd)] ml-2">
+              · {percentage}%
             </span>
           </div>
-        );
-      })}
+        </div>
+
+        {currentStage && (
+          <div className="text-right min-w-0">
+            <div className="text-[10px] uppercase tracking-[0.08em] text-[var(--ob-txd)] font-semibold">
+              {isFr ? "En cours" : "Current"}
+            </div>
+            <div className="flex items-center gap-1.5 mt-1 justify-end">
+              {CurrentIcon && (
+                <CurrentIcon
+                  size={14}
+                  className="text-[var(--step-active)]"
+                  aria-hidden="true"
+                />
+              )}
+              <span className="text-[13px] font-semibold text-[var(--ob-tx)] truncate">
+                {currentStage.label}
+              </span>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Floating icons above the bar */}
+      <div className="hidden sm:flex items-center justify-between mb-2 px-0.5">
+        {steps.map((step, i) => {
+          const Icon = step.icon;
+          const isDone = i < current;
+          const isActive = i === current;
+          const color = isDone
+            ? "var(--step-done)"
+            : isActive
+            ? "var(--step-active)"
+            : "var(--step-pending)";
+          return (
+            <div
+              key={step.key}
+              className="flex-1 flex justify-center transition-opacity duration-[var(--dur)]"
+              style={{ opacity: isDone || isActive ? 1 : 0.5 }}
+            >
+              <Icon size={14} style={{ color }} aria-hidden="true" />
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Segmented bar */}
+      <div
+        className="flex w-full h-3 sm:h-3.5 rounded-[var(--radius-pill)] overflow-hidden"
+        style={{ background: "var(--step-pending-bg)", gap: "2px" }}
+        role="progressbar"
+        aria-valuenow={percentage}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-label={`${isFr ? "Etape" : "Step"} ${current + 1}/${total}`}
+      >
+        {steps.map((step, i) => {
+          const isDone = i < current;
+          const isActive = i === current;
+
+          const background = isDone
+            ? "var(--step-done)"
+            : isActive
+            ? "var(--step-active)"
+            : "var(--step-pending-bg)";
+
+          const segmentProps = {
+            key: step.key,
+            "aria-label": `${isFr ? "Etape" : "Step"} ${i + 1}: ${step.label}`,
+            title: step.label,
+            className: `relative flex-1 transition-all duration-[var(--dur-slow)] ease-out ${
+              clickable ? "cursor-pointer hover:brightness-110 focus-visible:outline-none focus-visible:brightness-110" : ""
+            }`,
+            style: {
+              background,
+              boxShadow: isActive
+                ? "0 0 14px -2px color-mix(in srgb, var(--step-active) 60%, transparent)"
+                : "none",
+              border: "none",
+              padding: 0,
+            },
+          };
+
+          const innerContent = isActive ? (
+            <div
+              className="absolute inset-0 overflow-hidden"
+              style={{ mixBlendMode: "overlay" }}
+              aria-hidden="true"
+            >
+              <div
+                className="absolute inset-y-0 w-1/2"
+                style={{
+                  background:
+                    "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.6) 50%, transparent 100%)",
+                  animation: "shimmer-slide 1.8s linear infinite",
+                }}
+              />
+            </div>
+          ) : null;
+
+          return clickable ? (
+            <button
+              type="button"
+              onClick={() => onStepClick(i)}
+              {...segmentProps}
+            >
+              {innerContent}
+            </button>
+          ) : (
+            <div {...segmentProps}>{innerContent}</div>
+          );
+        })}
+      </div>
+
+      {/* Desktop labels */}
+      <div className="hidden md:flex items-start justify-between mt-2 px-0.5 gap-1">
+        {steps.map((step, i) => {
+          const isDone = i < current;
+          const isActive = i === current;
+          return (
+            <div
+              key={step.key}
+              className="flex-1 text-center text-[10px] font-medium leading-tight truncate"
+              style={{
+                color: isActive
+                  ? "var(--ob-tx)"
+                  : isDone
+                  ? "var(--ob-txm)"
+                  : "var(--ob-txdd)",
+              }}
+            >
+              {step.label}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Mobile compact labels */}
+      <div className="flex md:hidden items-center justify-between mt-3 text-[11px]">
+        {current > 0 ? (
+          <div className="text-[var(--ob-txd)] truncate max-w-[32%]">
+            ← {steps[current - 1].label}
+          </div>
+        ) : (
+          <div />
+        )}
+        <div className="font-semibold text-[var(--ob-tx)] truncate max-w-[40%] text-center">
+          {currentStage?.label}
+        </div>
+        {current < steps.length - 1 ? (
+          <div className="text-[var(--ob-txd)] truncate max-w-[32%] text-right">
+            {steps[current + 1].label} →
+          </div>
+        ) : (
+          <div />
+        )}
+      </div>
     </div>
   );
 }
@@ -545,7 +669,12 @@ export default function ClientOrderDetails({ order }) {
         transition={{ duration: 0.5, delay: 0.15 }}
         className="mb-8"
       >
-        <Stepper current={currentStep} steps={steps} />
+        <Stepper
+          current={currentStep}
+          steps={steps}
+          onStepClick={setCurrentStep}
+          t={t}
+        />
       </motion.div>
 
       {/* Detail card */}
