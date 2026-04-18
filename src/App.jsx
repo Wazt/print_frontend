@@ -33,6 +33,20 @@ const RawMaterialDetailPage = lazy(() => import("./Pages/Stock/rawMaterialDetail
 const RawMaterialCreatePage = lazy(() => import("./Pages/Stock/rawMaterialCreatePage"));
 const DesignSystem = lazy(() => import("./Pages/DesignSystem"));
 
+// Prototype — public signup + auth flows (mock data, no backend)
+const SignupPage = lazy(() => import("./Pages/Auth/SignupPage"));
+const VerifyPinPage = lazy(() => import("./Pages/Auth/VerifyPinPage"));
+const SetPasswordPage = lazy(() => import("./Pages/Auth/SetPasswordPage"));
+const ForgotPasswordPage = lazy(() => import("./Pages/Auth/ForgotPasswordPage"));
+const ResetPasswordPage = lazy(() => import("./Pages/Auth/ResetPasswordPage"));
+
+// Prototype — Contacts, Network, Admin
+const ContactsPage = lazy(() => import("./Pages/Contacts/ContactsPage"));
+const ContactDetailPage = lazy(() => import("./Pages/Contacts/ContactDetailPage"));
+const ContactFormPage = lazy(() => import("./Pages/Contacts/ContactFormPage"));
+const NetworkPage = lazy(() => import("./Pages/Network/NetworkPage"));
+const DuplicateAlertsPage = lazy(() => import("./Pages/Admin/DuplicateAlertsPage"));
+
 function PageLoader() {
   return (
     <div className="flex items-center justify-center min-h-[40vh]">
@@ -50,6 +64,13 @@ function App() {
           <Routes>
             <Route path="/auth/login" element={<LoginPage />} />
             <Route path="/design-system" element={<DesignSystem />} />
+
+            {/* Prototype — public signup + auth flows */}
+            <Route path="/signup" element={<SignupPage />} />
+            <Route path="/signup/verify" element={<VerifyPinPage />} />
+            <Route path="/auth/set-password" element={<SetPasswordPage />} />
+            <Route path="/auth/forgot-password" element={<ForgotPasswordPage />} />
+            <Route path="/auth/reset-password" element={<ResetPasswordPage />} />
             <Route
               path="/"
               element={
@@ -78,6 +99,16 @@ function App() {
               <Route path="/stock" element={<PrivateRoute><RawMaterialsPage /></PrivateRoute>} />
               <Route path="/stock/:id" element={<PrivateRoute><RawMaterialDetailPage /></PrivateRoute>} />
               <Route path="/stock/create" element={<PrivateRoute><RawMaterialCreatePage /></PrivateRoute>} />
+
+              {/* Prototype — Contacts */}
+              <Route path="/contacts" element={<PrivateRoute><ContactsPage /></PrivateRoute>} />
+              <Route path="/contacts/new" element={<PrivateRoute><ContactFormPage /></PrivateRoute>} />
+              <Route path="/contacts/:id" element={<PrivateRoute><ContactDetailPage /></PrivateRoute>} />
+              <Route path="/contacts/:id/edit" element={<PrivateRoute><ContactFormPage /></PrivateRoute>} />
+
+              {/* Prototype — Network + Admin */}
+              <Route path="/network" element={<PrivateRoute><NetworkPage /></PrivateRoute>} />
+              <Route path="/admin/duplicate-alerts" element={<PrivateRoute><DuplicateAlertsPage /></PrivateRoute>} />
             </Route>
           </Routes>
           </Suspense>

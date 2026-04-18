@@ -13,6 +13,9 @@ import {
   PageHeader, StatCard, DataCard, DataTable, StatusPill, EmptyState,
   FormField, Input, Textarea, Button,
 } from "@/Components/primitives";
+import { MOCK_MEMBERSHIPS, MOCK_CONTACTS, getInitials, avatarGradient } from "@/lib/fixtures/contacts";
+import { getRoleLabel, getRoleTier, ROLE_TIERS } from "@/lib/fixtures/companyTypes";
+import { Users, Plus, Star } from "lucide-react";
 import {
   Dialog, DialogContent, DialogDescription, DialogFooter,
   DialogHeader, DialogTitle,
@@ -241,6 +244,9 @@ export default function CompanyDetailPage() {
         />
       </DataCard>
 
+      {/* Contacts section — Preview (prototype mock data) */}
+      <CompanyContactsSection t={t} navigate={navigate} />
+
       {/* Edit sheet */}
       <Sheet open={isEditOpen} onOpenChange={setIsEditOpen}>
         <SheetContent className="bg-[var(--surface)] border-l border-[var(--border)]">
@@ -312,6 +318,120 @@ export default function CompanyDetailPage() {
         </DialogContent>
       </Dialog>
     </div>
+  );
+}
+
+function CompanyContactsSection({ t, navigate }) {
+  const isFr = t("lang") === "fr";
+
+  // For the prototype: use mock memberships for c-001 (Agence Pixel Alger) as showcase
+  // since real company IDs won't match fixture IDs. This lets the user see the UX.
+  const demoCompanyId = "c-001";
+  const memberships = MOCK_MEMBERSHIPS.filter((m) => m.company_id === demoCompanyId);
+  const byTier = {};
+  memberships.forEach((m) => {
+    const tier = getRoleTier(m.profile_role);
+    if (!byTier[tier]) byTier[tier] = [];
+    byTier[tier].push(m);
+  });
+
+  return (
+    <DataCard
+      title={isFr ? "Contacts" : "Contacts"}
+      description={
+        isFr
+          ? `${memberships.length} personnes liees - groupees par niveau`
+          : `${memberships.length} linked people - grouped by tier`
+      }
+      icon={Users}
+      action={
+        <div className="flex items-center gap-2">
+          <span className="text-[10px] uppercase tracking-wider text-[var(--warning)] font-semibold bg-[var(--warning-bg)] px-2 py-1 rounded-[var(--radius-sm)]">
+            {isFr ? "Apercu prototype" : "Prototype preview"}
+          </span>
+          <Button size="sm" variant="outline" onClick={() => navigate("/contacts/new")}>
+            <Plus size={13} />
+            {isFr ? "Ajouter" : "Add"}
+          </Button>
+        </div>
+      }
+    >
+      {memberships.length === 0 ? (
+        <EmptyState
+          icon={Users}
+          title={isFr ? "Aucun contact" : "No contacts"}
+          description={
+            isFr
+              ? "Liez des personnes a cette entreprise avec leur role"
+              : "Link people to this company with their role"
+          }
+        />
+      ) : (
+        <div className="space-y-5">
+          {ROLE_TIERS.map((tier) => {
+            const list = byTier[tier.value];
+            if (!list || list.length === 0) return null;
+            return (
+              <div key={tier.value}>
+                <div className="text-[10px] uppercase tracking-wider text-[var(--text-3)] font-semibold mb-2.5">
+                  {isFr ? tier.labelFr : tier.labelEn}
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {list.map((m) => {
+                    const contact = MOCK_CONTACTS.find((c) => c.id === m.contact_id);
+                    if (!contact) return null;
+                    const otherCount = MOCK_MEMBERSHIPS.filter(
+                      (mm) => mm.contact_id === contact.id && mm.company_id !== demoCompanyId
+                    ).length;
+                    return (
+                      <button
+                        key={m.id}
+                        type="button"
+                        onClick={() => navigate(`/contacts/${contact.id}`)}
+                        className="text-left bg-[var(--surface-2)] rounded-[var(--radius)] p-3 hover:bg-[var(--surface-3)] transition-colors"
+                      >
+                        <div className="flex items-start gap-2.5">
+                          <div
+                            className="w-9 h-9 rounded-full flex items-center justify-center text-white font-semibold text-[12px] flex-shrink-0"
+                            style={{ background: avatarGradient(contact.full_name) }}
+                            aria-hidden="true"
+                          >
+                            {getInitials(contact.full_name)}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-1">
+                              <div className="text-[13px] font-semibold text-[var(--text)] truncate">
+                                {contact.full_name}
+                              </div>
+                              {m.is_primary && (
+                                <Star
+                                  size={10}
+                                  fill="currentColor"
+                                  className="text-[var(--warning)] flex-shrink-0"
+                                  aria-label="Primary"
+                                />
+                              )}
+                            </div>
+                            <div className="text-[11px] text-[var(--text-3)] mt-0.5 truncate">
+                              {getRoleLabel(m.profile_role, isFr)}
+                            </div>
+                            {otherCount > 0 && (
+                              <div className="text-[10px] text-[var(--accent)] mt-1 font-medium">
+                                {isFr ? `Aussi dans ${otherCount} autres` : `Also in ${otherCount} other${otherCount > 1 ? "s" : ""}`}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </DataCard>
   );
 }
 

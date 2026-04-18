@@ -1,6 +1,7 @@
-import { useContext, useState } from "react";
-import { Printer, Loader2, Eye, EyeOff, Lock, Mail, ArrowRight, CheckCircle2 } from "lucide-react";
-import { Toaster } from "sonner";
+import { useContext, useEffect, useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Printer, Eye, EyeOff, Lock, Mail, ArrowRight, CheckCircle2 } from "lucide-react";
+import { Toaster, toast } from "sonner";
 import AuthContext from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import LanguageSwitcher from "@/Components/LanguageSwitcher";
@@ -9,7 +10,29 @@ import { Button, FormField, Input } from "@/Components/primitives";
 export default function LoginPage() {
   const { login, isLoading } = useContext(AuthContext);
   const { t } = useLanguage();
+  const { state } = useLocation();
+  const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
+  const isFr = t("lang") === "fr";
+
+  // Banner when redirected from signup / password reset
+  useEffect(() => {
+    if (state?.signupSuccess) {
+      toast.success(
+        isFr
+          ? "Compte cree ! Connectez-vous avec votre nouveau mot de passe."
+          : "Account created! Sign in with your new password."
+      );
+    }
+  }, [state, isFr]);
+
+  const handleOAuth = (provider) => {
+    toast.info(
+      isFr
+        ? `OAuth ${provider} — disponible en phase A (backend requis)`
+        : `${provider} OAuth — coming in phase A (backend required)`
+    );
+  };
 
   return (
     <div className="min-h-screen bg-[var(--bg)] flex">
@@ -75,13 +98,57 @@ export default function LoginPage() {
           <div className="w-full max-w-md">
             <div className="mb-8">
               <h2 className="text-3xl font-semibold text-[var(--text)] tracking-tight">
-                {t("lang") === "fr" ? "Bienvenue" : "Welcome back"}
+                {isFr ? "Bienvenue" : "Welcome back"}
               </h2>
               <p className="mt-2 text-[14px] text-[var(--text-3)]">
-                {t("lang") === "fr"
-                  ? "Connectez-vous pour acceder a votre tableau de bord"
-                  : "Sign in to access your dashboard"}
+                {isFr ? "Pas encore de compte ? " : "No account yet? "}
+                <Link to="/signup" className="font-medium text-[var(--accent)] hover:underline">
+                  {isFr ? "Inscrivez-vous" : "Sign up"}
+                </Link>
               </p>
+            </div>
+
+            {/* OAuth buttons */}
+            <div className="space-y-2 mb-6">
+              <Button
+                variant="outline"
+                size="lg"
+                className="w-full !justify-center"
+                onClick={() => handleOAuth("Google")}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
+                  <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                  <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84A10.99 10.99 0 0 0 12 23z" />
+                  <path fill="#FBBC05" d="M5.84 14.09A6.58 6.58 0 0 1 5.47 12c0-.72.13-1.43.36-2.09V7.07H2.18A10.99 10.99 0 0 0 1 12c0 1.77.43 3.45 1.18 4.93l3.66-2.84z" />
+                  <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1A10.99 10.99 0 0 0 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+                </svg>
+                {isFr ? "Continuer avec Google" : "Continue with Google"}
+              </Button>
+              <Button
+                variant="outline"
+                size="lg"
+                className="w-full !justify-center"
+                onClick={() => handleOAuth("Microsoft")}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
+                  <path fill="#F25022" d="M1 1h10v10H1z" />
+                  <path fill="#7FBA00" d="M13 1h10v10H13z" />
+                  <path fill="#00A4EF" d="M1 13h10v10H1z" />
+                  <path fill="#FFB900" d="M13 13h10v10H13z" />
+                </svg>
+                {isFr ? "Continuer avec Microsoft" : "Continue with Microsoft"}
+              </Button>
+            </div>
+
+            <div className="relative my-6">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-[var(--border)]"></div>
+              </div>
+              <div className="relative flex justify-center text-xs">
+                <span className="bg-[var(--bg)] px-3 text-[var(--text-3)]">
+                  {isFr ? "ou avec email" : "or with email"}
+                </span>
+              </div>
             </div>
 
             <form onSubmit={login} className="space-y-5">
@@ -129,16 +196,14 @@ export default function LoginPage() {
               <div className="flex items-center justify-between">
                 <label className="flex items-center gap-2 text-[13px] text-[var(--text-2)] cursor-pointer">
                   <input type="checkbox" className="h-4 w-4 rounded border-[var(--border-2)] accent-[var(--accent)]" />
-                  {t("lang") === "fr" ? "Rester connecte" : "Keep me signed in"}
+                  {isFr ? "Rester connecte" : "Keep me signed in"}
                 </label>
                 <button
                   type="button"
                   className="text-[13px] font-medium text-[var(--accent)] hover:underline focus-visible:outline-none focus-visible:shadow-[var(--shadow-focus)] rounded-[var(--radius-sm)]"
-                  onClick={() => {
-                    // TODO: wire up forgot password flow
-                  }}
+                  onClick={() => navigate("/auth/forgot-password")}
                 >
-                  {t("lang") === "fr" ? "Mot de passe oublie ?" : "Forgot password?"}
+                  {isFr ? "Mot de passe oublie ?" : "Forgot password?"}
                 </button>
               </div>
 

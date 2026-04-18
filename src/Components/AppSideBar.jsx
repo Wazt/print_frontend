@@ -1,6 +1,7 @@
 import {
   Home, Inbox, Users, Settings, LogOut, PlusCircle, Folder,
   HelpCircle, FileText, MessageSquare, Boxes, Package, Receipt, Printer,
+  Contact, Network, AlertTriangle,
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { useContext } from "react";
@@ -22,6 +23,8 @@ function useNavSections(t, role) {
     ];
   }
 
+  const isFr = t("lang") === "fr";
+
   return [
     {
       label: t("nav.dashboard"),
@@ -29,6 +32,7 @@ function useNavSections(t, role) {
         { title: t("nav.dashboard"), url: "/", icon: Home },
         { title: t("nav.orders"), url: "/Commandes", icon: Inbox },
         { title: t("nav.clients"), url: "/companies", icon: Users },
+        { title: isFr ? "Contacts" : "Contacts", url: "/contacts", icon: Contact, isNew: true },
       ],
     },
     {
@@ -49,6 +53,8 @@ function useNavSections(t, role) {
       items: [
         { title: t("nav.users"), url: "/users", icon: Users },
         { title: t("nav.documents"), url: "/drive", icon: Folder },
+        { title: isFr ? "Reseau" : "Network", url: "/network", icon: Network, isNew: true },
+        { title: isFr ? "Alertes doublons" : "Duplicate alerts", url: "/admin/duplicate-alerts", icon: AlertTriangle, badge: "1", isNew: true },
         { title: t("nav.settings"), url: "/settings", icon: Settings },
       ],
     },
@@ -81,6 +87,15 @@ export function AppSidebar({ onNavigate }) {
           className={active ? "" : "text-[var(--text-3)] group-hover:text-[var(--text-2)]"}
         />
         <span className="truncate flex-1">{item.title}</span>
+        {item.isNew && !item.badge && (
+          <span
+            className={`text-[9px] font-bold px-1.5 py-0.5 rounded-[var(--radius-pill)] uppercase tracking-wider ${
+              active ? "bg-white/15 text-white" : "bg-[var(--success-bg)] text-[var(--success)]"
+            }`}
+          >
+            NEW
+          </span>
+        )}
         {item.badge && (
           <span
             className={`text-[10px] font-semibold px-1.5 rounded-[var(--radius-pill)] ${

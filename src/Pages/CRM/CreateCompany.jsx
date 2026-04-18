@@ -4,18 +4,20 @@ import { Building2, ArrowLeft } from "lucide-react";
 import { createCompany } from "@/Services/CompanyService";
 import { toast } from "sonner";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { PageHeader, DataCard, FormField, Input, Textarea, Button } from "@/Components/primitives";
+import { PageHeader, DataCard, FormField, Input, Textarea, Select, Button } from "@/Components/primitives";
+import { COMPANY_TYPES } from "@/lib/fixtures/companyTypes";
 
 export default function CreateCompany() {
   const navigate = useNavigate();
   const { t } = useLanguage();
-  const [formData, setFormData] = useState({ name: "", email: "", phone: "", address: "" });
+  const [formData, setFormData] = useState({ name: "", type: "", email: "", phone: "", address: "" });
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const validate = () => {
     const e = {};
     if (!formData.name.trim()) e.name = t("lang") === "fr" ? "Nom requis" : "Name required";
+    if (!formData.type) e.type = t("lang") === "fr" ? "Type requis" : "Type required";
     if (!formData.email.trim()) e.email = "Email requis";
     else if (!/\S+@\S+\.\S+/.test(formData.email)) e.email = "Email invalide";
     if (!formData.phone.trim()) e.phone = t("lang") === "fr" ? "Telephone requis" : "Phone required";
@@ -63,20 +65,44 @@ export default function CreateCompany() {
 
       <DataCard>
         <form onSubmit={handleSubmit} className="space-y-5">
-          <FormField
-            label={t("lang") === "fr" ? "Nom de l'entreprise" : "Company name"}
-            htmlFor="name"
-            error={errors.name}
-            required
-          >
-            <Input
-              id="name"
-              name="name"
-              value={formData.name}
-              onChange={handleChange}
-              placeholder={t("lang") === "fr" ? "Ex: Lab Perfect" : "Ex: Lab Perfect"}
-            />
-          </FormField>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <FormField
+              label={t("lang") === "fr" ? "Nom de l'entreprise" : "Company name"}
+              htmlFor="name"
+              error={errors.name}
+              required
+            >
+              <Input
+                id="name"
+                name="name"
+                value={formData.name}
+                onChange={handleChange}
+                placeholder={t("lang") === "fr" ? "Ex: Lab Perfect" : "Ex: Lab Perfect"}
+              />
+            </FormField>
+            <FormField
+              label={t("lang") === "fr" ? "Type d'entreprise" : "Company type"}
+              htmlFor="type"
+              error={errors.type}
+              required
+            >
+              <Select
+                id="type"
+                name="type"
+                value={formData.type}
+                onChange={handleChange}
+              >
+                <option value="">
+                  {t("lang") === "fr" ? "Selectionnez..." : "Select..."}
+                </option>
+                {COMPANY_TYPES.map((ct) => (
+                  <option key={ct.value} value={ct.value}>
+                    {t("lang") === "fr" ? ct.labelFr : ct.labelEn}
+                  </option>
+                ))}
+              </Select>
+            </FormField>
+          </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <FormField label="Email" htmlFor="email" error={errors.email} required>
