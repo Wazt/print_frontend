@@ -36,16 +36,19 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen bg-[var(--bg)] flex">
-      {/* Left — branding (photo hero with dark overlay) */}
+      {/* Left — branding (video hero with dark overlay) */}
       <div className="hidden lg:flex lg:w-1/2 bg-[#0F172A] text-white flex-col p-10 relative overflow-hidden">
-        {/* Photo hero */}
-        <img
-          src="/brand/login-hero.jpg"
-          alt=""
+        {/* Video hero — autoplays muted, poster = paint splash for instant paint-in */}
+        <video
+          src="/brand/login-hero.mp4"
+          poster="/brand/login-hero.jpg"
+          autoPlay
+          muted
+          loop
+          playsInline
+          preload="metadata"
           aria-hidden="true"
           className="absolute inset-0 w-full h-full object-cover"
-          loading="eager"
-          decoding="async"
         />
         {/* Dark gradient overlay — keep text readable */}
         <div className="absolute inset-0 bg-gradient-to-br from-[#0F172A]/95 via-[#0F172A]/80 to-[#0F172A]/60" />
