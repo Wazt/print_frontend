@@ -39,7 +39,7 @@ export default function OnboardingShell({
       >
         {/* Bottom-right print machine image */}
         <div
-          className="absolute bottom-0 right-0 w-[65%] max-w-[900px] aspect-video opacity-30"
+          className="absolute bottom-0 right-0 w-[55%] max-w-[800px] aspect-video opacity-25"
           style={{
             backgroundImage: "url('/brand/steps-bg.jpg')",
             backgroundSize: "cover",
@@ -50,12 +50,18 @@ export default function OnboardingShell({
               "linear-gradient(to top left, rgba(0,0,0,1) 0%, rgba(0,0,0,0.6) 35%, rgba(0,0,0,0) 75%)",
           }}
         />
-        {/* Top-left subtle accent glow for balance */}
+        {/* Top-left mirrored copy — horizontally flipped, fades toward bottom-right */}
         <div
-          className="absolute -top-32 -left-32 w-[500px] h-[500px] rounded-full opacity-40"
+          className="absolute top-0 left-0 w-[55%] max-w-[800px] aspect-video opacity-25"
           style={{
-            background:
-              "radial-gradient(circle, color-mix(in srgb, var(--accent) 15%, transparent) 0%, transparent 70%)",
+            backgroundImage: "url('/brand/steps-bg.jpg')",
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+            transform: "scaleX(-1)",
+            maskImage:
+              "linear-gradient(to bottom right, rgba(0,0,0,1) 0%, rgba(0,0,0,0.6) 35%, rgba(0,0,0,0) 75%)",
+            WebkitMaskImage:
+              "linear-gradient(to bottom right, rgba(0,0,0,1) 0%, rgba(0,0,0,0.6) 35%, rgba(0,0,0,0) 75%)",
           }}
         />
       </div>
