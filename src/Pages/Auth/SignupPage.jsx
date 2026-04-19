@@ -268,7 +268,7 @@ function EntryLayout({ email, setEmail, onContinue, onOAuth, isFr, navigate }) {
         <div className="absolute -top-24 -right-24 w-96 h-96 rounded-full bg-[var(--accent)]/5 blur-3xl" />
         <div className="absolute -bottom-24 -left-24 w-96 h-96 rounded-full bg-[var(--accent)]/10 blur-3xl" />
 
-        <div className="relative max-w-md">
+        <div className="relative w-full max-w-2xl">
           <div className="flex items-center gap-2.5 mb-8">
             <div className="w-10 h-10 rounded-[var(--radius)] bg-[var(--brand)] flex items-center justify-center">
               <Printer
@@ -293,46 +293,51 @@ function EntryLayout({ email, setEmail, onContinue, onOAuth, isFr, navigate }) {
               : "Order management, multi-company contacts, quotes and invoicing."}
           </p>
 
-          {/* Animated hero GIF */}
-          <div className="relative rounded-[var(--radius-xl)] overflow-hidden shadow-[var(--shadow-lift)] border border-[var(--accent)]/10 mb-6 aspect-[4/3]">
-            <img
-              src="/brand/onboarding-hero.gif"
-              alt={
-                isFr
-                  ? "Equipe PrintFlow collaborant sur la plateforme"
-                  : "PrintFlow team collaborating on the platform"
-              }
-              className="w-full h-full object-cover"
-              loading="eager"
-              decoding="async"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-[var(--accent)]/15 via-transparent to-transparent pointer-events-none" />
+          {/* Hero picture + features side-by-side */}
+          <div className="flex items-stretch gap-5 mb-6">
+            {/* Animated hero GIF */}
+            <div className="relative rounded-[var(--radius-xl)] overflow-hidden shadow-[var(--shadow-lift)] border border-[var(--accent)]/10 flex-1 min-w-0 aspect-[4/3]">
+              <img
+                src="/brand/onboarding-hero.gif"
+                alt={
+                  isFr
+                    ? "Equipe PrintFlow collaborant sur la plateforme"
+                    : "PrintFlow team collaborating on the platform"
+                }
+                className="w-full h-full object-cover"
+                loading="eager"
+                decoding="async"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-[var(--accent)]/15 via-transparent to-transparent pointer-events-none" />
+            </div>
+
+            {/* Feature pills stacked vertically to the right */}
+            <div className="flex flex-col justify-center gap-2.5 w-[210px] flex-shrink-0">
+              {[
+                isFr ? "30 secondes" : "30 seconds",
+                isFr ? "Multi-entreprises" : "Multi-company",
+                isFr ? "Reseau actif" : "Active network",
+                isFr ? "Paiements integres" : "Built-in payments",
+              ].map((feat) => (
+                <div
+                  key={feat}
+                  className="flex items-center gap-2 text-[13px] font-medium text-[var(--text-2)] bg-[var(--surface)]/60 backdrop-blur-sm rounded-full px-3.5 py-2 border border-[var(--accent)]/10"
+                >
+                  <CheckCircle2
+                    size={14}
+                    className="text-[var(--accent)] flex-shrink-0"
+                    aria-hidden="true"
+                  />
+                  <span className="truncate">{feat}</span>
+                </div>
+              ))}
+            </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-2">
-            {[
-              isFr ? "30 secondes" : "30 seconds",
-              isFr ? "Multi-entreprises" : "Multi-company",
-              isFr ? "Reseau actif" : "Active network",
-              isFr ? "Paiements integres" : "Built-in payments",
-            ].map((feat) => (
-              <div
-                key={feat}
-                className="flex items-center gap-1.5 text-[12px] text-[var(--text-2)] bg-[var(--surface)]/60 backdrop-blur-sm rounded-full px-3 py-1.5 border border-[var(--accent)]/10"
-              >
-                <CheckCircle2
-                  size={13}
-                  className="text-[var(--accent)] flex-shrink-0"
-                  aria-hidden="true"
-                />
-                <span className="truncate">{feat}</span>
-              </div>
-            ))}
+          {/* Copyright inline below */}
+          <div className="pt-4 border-t border-[var(--accent)]/10 text-[12px] text-[var(--text-3)]">
+            © 2026 PrintFlow · Built by Axentis
           </div>
-        </div>
-
-        <div className="absolute bottom-6 left-12 text-[12px] text-[var(--text-3)]">
-          © 2026 PrintFlow · Built by Axentis
         </div>
       </div>
 
