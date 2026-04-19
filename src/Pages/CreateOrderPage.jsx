@@ -163,7 +163,7 @@ export default function CreateOrderPage() {
         {items.length === 0 && (
           <DataCard>
             <EmptyState
-              icon={Package}
+              illustration="production"
               title={t("lang") === "fr" ? "Aucun article" : "No items yet"}
               description={
                 t("lang") === "fr"

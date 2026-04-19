@@ -36,11 +36,20 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen bg-[var(--bg)] flex">
-      {/* Left — branding (always dark) */}
+      {/* Left — branding (photo hero with dark overlay) */}
       <div className="hidden lg:flex lg:w-1/2 bg-[#0F172A] text-white flex-col p-10 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-[#0F172A] via-[#1E293B] to-[#0F172A]" />
-        <div className="absolute -top-32 -right-32 w-96 h-96 rounded-full bg-sky-500/10 blur-3xl" />
-        <div className="absolute -bottom-32 -left-32 w-96 h-96 rounded-full bg-sky-500/5 blur-3xl" />
+        {/* Photo hero */}
+        <img
+          src="/brand/login-hero.jpg"
+          alt=""
+          aria-hidden="true"
+          className="absolute inset-0 w-full h-full object-cover"
+          loading="eager"
+          decoding="async"
+        />
+        {/* Dark gradient overlay — keep text readable */}
+        <div className="absolute inset-0 bg-gradient-to-br from-[#0F172A]/95 via-[#0F172A]/80 to-[#0F172A]/60" />
+        <div className="absolute inset-0 bg-[#0F172A]/40" />
 
         <div className="relative flex items-center gap-2.5">
           <div className="w-9 h-9 rounded-[var(--radius)] bg-sky-500 flex items-center justify-center">

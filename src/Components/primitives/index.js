@@ -9,3 +9,4 @@ export { default as SectionTitle } from "./SectionTitle";
 export { default as Toolbar, FilterChip } from "./Toolbar";
 export { default as Button } from "./Button";
 export { default as PinInput } from "./PinInput";
+export { default as BrandIllustration } from "./BrandIllustration";

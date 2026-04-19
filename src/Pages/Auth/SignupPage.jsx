@@ -263,13 +263,13 @@ function Step2({ form, update, isFr, onSelectCompany }) {
 function EntryLayout({ email, setEmail, onContinue, onOAuth, isFr, navigate }) {
   return (
     <div className="min-h-screen bg-[var(--bg)] flex">
-      {/* LEFT — brand pitch (soft light panel) */}
+      {/* LEFT — brand pitch with animated hero */}
       <div className="hidden lg:flex lg:w-1/2 bg-[var(--accent-bg)] flex-col p-12 justify-center relative overflow-hidden">
         <div className="absolute -top-24 -right-24 w-96 h-96 rounded-full bg-[var(--accent)]/5 blur-3xl" />
         <div className="absolute -bottom-24 -left-24 w-96 h-96 rounded-full bg-[var(--accent)]/10 blur-3xl" />
 
         <div className="relative max-w-md">
-          <div className="flex items-center gap-2.5 mb-10">
+          <div className="flex items-center gap-2.5 mb-8">
             <div className="w-10 h-10 rounded-[var(--radius)] bg-[var(--brand)] flex items-center justify-center">
               <Printer
                 size={20}
@@ -282,46 +282,52 @@ function EntryLayout({ email, setEmail, onContinue, onOAuth, isFr, navigate }) {
             </span>
           </div>
 
-          <h1 className="text-[28px] md:text-[32px] font-semibold tracking-tight leading-tight text-[var(--text)] mb-4">
+          <h1 className="text-[26px] md:text-[30px] font-semibold tracking-tight leading-tight text-[var(--text)] mb-3">
             {isFr
               ? "L'outil qui simplifie la vie des imprimeurs et agences"
               : "The tool that simplifies life for printers and agencies"}
           </h1>
-          <p className="text-[15px] text-[var(--text-2)] leading-relaxed mb-10">
+          <p className="text-[14px] text-[var(--text-2)] leading-relaxed mb-6">
             {isFr
-              ? "Gestion des commandes, contacts multi-entreprises, devis et facturation — tout dans une plateforme unifiee."
-              : "Order management, multi-company contacts, quotes and invoicing — all in one unified platform."}
+              ? "Gestion des commandes, contacts multi-entreprises, devis et facturation."
+              : "Order management, multi-company contacts, quotes and invoicing."}
           </p>
 
-          <div className="bg-[var(--surface)]/50 backdrop-blur-sm border border-[var(--accent)]/10 rounded-[var(--radius-xl)] p-5 shadow-[var(--shadow-card)]">
-            <div className="space-y-3">
-              {[
+          {/* Animated hero GIF */}
+          <div className="relative rounded-[var(--radius-xl)] overflow-hidden shadow-[var(--shadow-lift)] border border-[var(--accent)]/10 mb-6 aspect-[4/3]">
+            <img
+              src="/brand/onboarding-hero.gif"
+              alt={
                 isFr
-                  ? "Inscription en 30 secondes"
-                  : "Signup in 30 seconds",
-                isFr
-                  ? "Gestion multi-entreprises pour freelances"
-                  : "Multi-company management for freelancers",
-                isFr
-                  ? "Reseau d'imprimeurs et infographes"
-                  : "Network of printers and designers",
-                isFr
-                  ? "Facturation et paiements integres"
-                  : "Built-in invoicing and payments",
-              ].map((feat) => (
-                <div
-                  key={feat}
-                  className="flex items-center gap-2.5 text-[13px] text-[var(--text-2)]"
-                >
-                  <CheckCircle2
-                    size={16}
-                    className="text-[var(--accent)] flex-shrink-0"
-                    aria-hidden="true"
-                  />
-                  {feat}
-                </div>
-              ))}
-            </div>
+                  ? "Equipe PrintFlow collaborant sur la plateforme"
+                  : "PrintFlow team collaborating on the platform"
+              }
+              className="w-full h-full object-cover"
+              loading="eager"
+              decoding="async"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-[var(--accent)]/15 via-transparent to-transparent pointer-events-none" />
+          </div>
+
+          <div className="grid grid-cols-2 gap-2">
+            {[
+              isFr ? "30 secondes" : "30 seconds",
+              isFr ? "Multi-entreprises" : "Multi-company",
+              isFr ? "Reseau actif" : "Active network",
+              isFr ? "Paiements integres" : "Built-in payments",
+            ].map((feat) => (
+              <div
+                key={feat}
+                className="flex items-center gap-1.5 text-[12px] text-[var(--text-2)] bg-[var(--surface)]/60 backdrop-blur-sm rounded-full px-3 py-1.5 border border-[var(--accent)]/10"
+              >
+                <CheckCircle2
+                  size={13}
+                  className="text-[var(--accent)] flex-shrink-0"
+                  aria-hidden="true"
+                />
+                <span className="truncate">{feat}</span>
+              </div>
+            ))}
           </div>
         </div>
 

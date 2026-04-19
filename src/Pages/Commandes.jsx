@@ -257,7 +257,8 @@ export default function Commandes() {
           onRowClick={(row) => navigate(`/Commandes/OrderDetails/${row.id}`)}
           empty={
             <EmptyState
-              icon={Package}
+              illustration={searchTerm ? undefined : "production"}
+              icon={searchTerm ? Package : undefined}
               title={t("lang") === "fr" ? "Aucune commande" : "No orders found"}
               description={
                 searchTerm
@@ -265,8 +266,8 @@ export default function Commandes() {
                     ? "Essayez d'ajuster votre recherche"
                     : "Try adjusting your search"
                   : t("lang") === "fr"
-                    ? "Commencez par creer votre premiere commande"
-                    : "Get started by creating your first order"
+                    ? "Commencez par creer votre premiere commande d'impression"
+                    : "Get started by creating your first print order"
               }
               action={
                 <Button variant="accent" onClick={() => navigate("/Commandes/creer")}>
