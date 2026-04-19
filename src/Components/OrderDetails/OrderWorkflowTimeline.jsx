@@ -1,147 +1,256 @@
 import React from "react";
-import { CheckCircle, Circle, Clock, Package, Truck, CreditCard, XCircle } from "lucide-react";
-import { Card, CardContent } from "@/Components/ui/card";
+import {
+  Clock, CheckCircle, Package, Truck, CreditCard, CheckCheck, XCircle,
+} from "lucide-react";
+import { DataCard } from "@/Components/primitives";
+import { useLanguage } from "@/contexts/LanguageContext";
+
+const STAGES_EN = [
+  { key: "PENDING", label: "Pending", icon: Clock },
+  { key: "ACCEPTED", label: "Accepted", icon: CheckCircle },
+  { key: "PROCESSING", label: "Processing", icon: Package },
+  { key: "PROCESSED", label: "Processed", icon: Package },
+  { key: "PARTIAL_DELIVERED", label: "Partial delivered", icon: Truck },
+  { key: "DELIVRED", label: "Delivered", icon: Truck },
+  { key: "PARTIAL_PAIED", label: "Partial paid", icon: CreditCard },
+  { key: "PAIED", label: "Paid", icon: CreditCard },
+  { key: "FINISHED", label: "Finished", icon: CheckCheck },
+];
+
+const STAGES_FR = [
+  { key: "PENDING", label: "En attente", icon: Clock },
+  { key: "ACCEPTED", label: "Acceptee", icon: CheckCircle },
+  { key: "PROCESSING", label: "En cours", icon: Package },
+  { key: "PROCESSED", label: "Traitee", icon: Package },
+  { key: "PARTIAL_DELIVERED", label: "Livr. partielle", icon: Truck },
+  { key: "DELIVRED", label: "Livree", icon: Truck },
+  { key: "PARTIAL_PAIED", label: "Paie partiel", icon: CreditCard },
+  { key: "PAIED", label: "Payee", icon: CreditCard },
+  { key: "FINISHED", label: "Terminee", icon: CheckCheck },
+];
 
 function OrderWorkflowTimeline({ status }) {
+  const { t } = useLanguage();
+  const isFr = t("lang") === "fr";
+  const stages = isFr ? STAGES_FR : STAGES_EN;
+
   const statusUpper = status?.toUpperCase();
-
-  // Define workflow stages
-  const stages = [
-    { key: "PENDING", label: "Pending", icon: Clock },
-    { key: "ACCEPTED", label: "Accepted", icon: CheckCircle },
-    { key: "PROCESSING", label: "Processing", icon: Package },
-    { key: "PROCESSED", label: "Processed", icon: Package },
-    { key: "PARTIAL_DELIVERED", label: "Partial Delivered", icon: Truck },
-    { key: "DELIVRED", label: "Delivered", icon: Truck },
-    { key: "PARTIAL_PAIED", label: "Partial Paid", icon: CreditCard },
-    { key: "PAIED", label: "Paid", icon: CreditCard },
-    { key: "FINISHED", label: "Finished", icon: CheckCircle },
-  ];
-
-  // Special states
   const isRejected = statusUpper === "REJECTED";
   const isCancelled = statusUpper === "CANCELLED";
+  const isFailed = isRejected || isCancelled;
 
-  // Find current stage index
-  const currentStageIndex = stages.findIndex(stage => stage.key === statusUpper);
+  const currentStageIndex = stages.findIndex((s) => s.key === statusUpper);
+  const effectiveIndex = currentStageIndex >= 0 ? currentStageIndex : 0;
+  const completedCount = isFailed ? 0 : effectiveIndex;
+  const totalSteps = stages.length;
+  const percentage = isFailed
+    ? 0
+    : Math.round(((effectiveIndex + 1) / totalSteps) * 100);
 
-  const getStageStatus = (index) => {
-    if (isRejected || isCancelled) {
-      return "cancelled";
-    }
-    if (index < currentStageIndex) {
-      return "completed";
-    }
-    if (index === currentStageIndex) {
-      return "current";
-    }
-    return "upcoming";
-  };
+  const currentStage = stages[effectiveIndex];
 
-  const getStageColor = (stageStatus) => {
-    switch (stageStatus) {
-      case "completed":
-        return "bg-green-500 border-green-500 text-white";
-      case "current":
-        return "bg-blue-600 border-blue-600 text-white animate-pulse";
-      case "cancelled":
-        return "bg-red-500 border-red-500 text-white";
-      default:
-        return "bg-slate-200 border-slate-300 text-slate-400";
-    }
-  };
-
-  const getLineColor = (index) => {
-    if (isRejected || isCancelled) {
-      return "bg-red-200";
-    }
-    if (index < currentStageIndex) {
-      return "bg-green-500";
-    }
-    return "bg-slate-200";
-  };
+  const title = isFr ? "Progression de la commande" : "Order progress";
+  const subtitle = isFailed
+    ? isRejected
+      ? isFr ? "Cette commande a ete rejetee" : "This order has been rejected"
+      : isFr ? "Cette commande a ete annulee" : "This order has been cancelled"
+    : isFr ? "Suivez votre commande etape par etape" : "Track your order step by step";
 
   return (
-    <Card className="border-slate-200 shadow-sm mb-6">
-      <CardContent className="p-6">
-        <div className="mb-4">
-          <h3 className="text-lg font-semibold text-slate-900">Order Progress</h3>
-          <p className="text-sm text-slate-600 mt-1">
-            {isRejected && "This order has been rejected"}
-            {isCancelled && "This order has been cancelled"}
-            {!isRejected && !isCancelled && "Track your order through each stage"}
-          </p>
-        </div>
-
-        {/* Timeline */}
-        <div className="relative">
-          {/* Progress Line */}
-          <div className="absolute top-5 left-0 right-0 h-0.5 bg-slate-200 hidden sm:block"></div>
-          <div 
-            className="absolute top-5 left-0 h-0.5 bg-green-500 transition-all duration-500 hidden sm:block"
-            style={{ width: `${(currentStageIndex / (stages.length - 1)) * 100}%` }}
-          ></div>
-
-          {/* Stages */}
-          <div className="relative grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-9 gap-4">
-            {stages.map((stage, index) => {
-              const Icon = stage.icon;
-              const stageStatus = getStageStatus(index);
-              const isActive = index === currentStageIndex;
-
-              return (
-                <div key={stage.key} className="flex flex-col items-center text-center">
-                  {/* Icon Circle */}
-                  <div className={`relative z-10 w-10 h-10 rounded-full border-2 flex items-center justify-center transition-all duration-300 ${getStageColor(stageStatus)}`}>
-                    {stageStatus === "completed" ? (
-                      <CheckCircle size={20} strokeWidth={2.5} />
-                    ) : stageStatus === "cancelled" ? (
-                      <XCircle size={20} strokeWidth={2.5} />
-                    ) : stageStatus === "current" ? (
-                      <Icon size={20} strokeWidth={2.5} />
-                    ) : (
-                      <Circle size={20} strokeWidth={2} />
-                    )}
-                  </div>
-
-                  {/* Label */}
-                  <div className="mt-2">
-                    <p className={`text-xs font-medium ${isActive ? "text-slate-900" : "text-slate-600"}`}>
-                      {stage.label}
-                    </p>
-                    {isActive && !isRejected && !isCancelled && (
-                      <span className="inline-block mt-1 px-2 py-0.5 bg-blue-100 text-blue-700 text-xs rounded-full font-medium">
-                        Current
-                      </span>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
+    <DataCard title={title} description={subtitle}>
+      {/* Top row: step count + current step label */}
+      <div className="flex items-end justify-between mb-4 gap-4">
+        <div className="min-w-0">
+          <div className="text-[10px] uppercase tracking-wider text-[var(--text-3)] font-medium">
+            {isFr ? "Etape" : "Step"}
+          </div>
+          <div className="flex items-baseline gap-2 mt-0.5">
+            <span className="text-[24px] font-bold text-[var(--text)] tabular-nums leading-none">
+              {isFailed ? "—" : effectiveIndex + 1}
+            </span>
+            <span className="text-[13px] text-[var(--text-3)] tabular-nums">
+              / {totalSteps}
+            </span>
+            {!isFailed && (
+              <span className="text-[11px] text-[var(--text-3)] ml-2">
+                · {percentage}%
+              </span>
+            )}
           </div>
         </div>
 
-        {/* Rejected/Cancelled State */}
-        {(isRejected || isCancelled) && (
-          <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-full bg-red-500 flex items-center justify-center">
-                <XCircle className="text-white" size={20} />
-              </div>
-              <div>
-                <p className="font-semibold text-red-900">
-                  {isRejected ? "Order Rejected" : "Order Cancelled"}
-                </p>
-                <p className="text-sm text-red-700 mt-0.5">
-                  This order will not be processed further
-                </p>
-              </div>
+        {!isFailed && currentStage && (
+          <div className="text-right min-w-0">
+            <div className="text-[10px] uppercase tracking-wider text-[var(--text-3)] font-medium">
+              {isFr ? "En cours" : "Current"}
+            </div>
+            <div className="flex items-center gap-1.5 mt-1 justify-end">
+              <currentStage.icon size={14} className="text-[var(--accent)]" aria-hidden="true" />
+              <span className="text-[13px] font-semibold text-[var(--text)] truncate">
+                {currentStage.label}
+              </span>
             </div>
           </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+
+      {/* Icons row — float above the bar */}
+      <div className="hidden sm:flex items-center justify-between mb-2 px-0.5">
+        {stages.map((stage, i) => {
+          const Icon = stage.icon;
+          const isDone = !isFailed && i < effectiveIndex;
+          const isActive = !isFailed && i === effectiveIndex;
+          const color = isFailed
+            ? "var(--danger)"
+            : isDone
+            ? "var(--accent)"
+            : isActive
+            ? "var(--accent)"
+            : "var(--text-4)";
+          return (
+            <div
+              key={stage.key}
+              className="flex-1 flex justify-center"
+              style={{ opacity: isActive || isDone ? 1 : 0.5 }}
+            >
+              <Icon size={13} style={{ color }} aria-hidden="true" />
+            </div>
+          );
+        })}
+      </div>
+
+      {/* The segmented bar */}
+      <div
+        className="flex w-full h-3 sm:h-3.5 rounded-[var(--radius-pill)] overflow-hidden"
+        style={{ background: "var(--surface-2)", gap: "2px" }}
+        role="progressbar"
+        aria-valuenow={isFailed ? 0 : percentage}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-label={`${title} ${effectiveIndex + 1}/${totalSteps}`}
+      >
+        {stages.map((stage, i) => {
+          const isDone = !isFailed && i < effectiveIndex;
+          const isActive = !isFailed && i === effectiveIndex;
+          const isUpcoming = !isFailed && i > effectiveIndex;
+
+          const background = isFailed
+            ? "var(--danger)"
+            : isDone
+            ? "var(--accent)"
+            : isActive
+            ? "var(--accent)"
+            : "var(--surface-2)";
+
+          return (
+            <div
+              key={stage.key}
+              className="relative flex-1 transition-all duration-[var(--dur-slow)] ease-out"
+              style={{
+                background,
+                boxShadow: isActive
+                  ? "0 0 12px -2px color-mix(in srgb, var(--accent) 55%, transparent)"
+                  : "none",
+                opacity: isUpcoming ? 1 : 1,
+              }}
+              title={stage.label}
+            >
+              {/* Shimmer overlay — only on the active segment */}
+              {isActive && (
+                <div
+                  className="absolute inset-0 overflow-hidden"
+                  style={{ mixBlendMode: "overlay" }}
+                >
+                  <div
+                    className="absolute inset-y-0 w-1/2"
+                    style={{
+                      background:
+                        "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.55) 50%, transparent 100%)",
+                      animation: "shimmer-slide 1.8s linear infinite",
+                    }}
+                  />
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Stage labels row — only prev/current/next shown on mobile, all on desktop */}
+      <div className="hidden md:flex items-start justify-between mt-2 px-0.5 gap-1">
+        {stages.map((stage, i) => {
+          const isDone = !isFailed && i < effectiveIndex;
+          const isActive = !isFailed && i === effectiveIndex;
+          return (
+            <div
+              key={stage.key}
+              className="flex-1 text-center text-[10px] font-medium leading-tight truncate"
+              style={{
+                color: isActive
+                  ? "var(--text)"
+                  : isDone
+                  ? "var(--text-2)"
+                  : "var(--text-4)",
+              }}
+            >
+              {stage.label}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Mobile compact labels: prev · current · next */}
+      <div className="flex md:hidden items-center justify-between mt-3 text-[11px]">
+        {effectiveIndex > 0 && !isFailed ? (
+          <div className="text-[var(--text-3)] truncate max-w-[30%]">
+            ← {stages[effectiveIndex - 1].label}
+          </div>
+        ) : (
+          <div />
+        )}
+        <div className="font-semibold text-[var(--text)] truncate max-w-[40%] text-center">
+          {currentStage?.label}
+        </div>
+        {!isFailed && effectiveIndex < stages.length - 1 ? (
+          <div className="text-[var(--text-3)] truncate max-w-[30%] text-right">
+            {stages[effectiveIndex + 1].label} →
+          </div>
+        ) : (
+          <div />
+        )}
+      </div>
+
+      {/* Rejected / Cancelled banner */}
+      {isFailed && (
+        <div
+          className="mt-5 p-4 rounded-[var(--radius-lg)] flex items-center gap-3"
+          style={{
+            background: "var(--danger-bg)",
+            border: "1px solid color-mix(in srgb, var(--danger) 20%, transparent)",
+          }}
+        >
+          <div
+            className="h-10 w-10 rounded-full flex items-center justify-center flex-shrink-0"
+            style={{ background: "var(--danger)" }}
+          >
+            <XCircle className="text-white" size={20} aria-hidden="true" />
+          </div>
+          <div className="min-w-0">
+            <p className="font-semibold text-[14px]" style={{ color: "var(--danger)" }}>
+              {isRejected
+                ? isFr ? "Commande rejetee" : "Order rejected"
+                : isFr ? "Commande annulee" : "Order cancelled"}
+            </p>
+            <p className="text-[12px] mt-0.5" style={{ color: "var(--danger)", opacity: 0.8 }}>
+              {isFr
+                ? "Cette commande ne sera pas traitee"
+                : "This order will not be processed further"}
+            </p>
+          </div>
+        </div>
+      )}
+    </DataCard>
   );
 }
 
-export default OrderWorkflowTimeline;
+export default React.memo(OrderWorkflowTimeline);

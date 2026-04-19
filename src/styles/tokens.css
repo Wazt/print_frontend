@@ -1,0 +1,191 @@
+/* ═══════════════════════════════════════════════════════════════
+   PrintFlow Design Tokens — Polished Enterprise SaaS
+   Inspired by Notion / Stripe / Linear
+   ═══════════════════════════════════════════════════════════════ */
+
+:root {
+  /* ─── Surfaces & Borders ─── */
+  --bg:        #F8FAFC;
+  --surface:   #FFFFFF;
+  --surface-2: #F1F5F9;
+  --surface-3: #E2E8F0;
+  --border:    #E2E8F0;
+  --border-2:  #CBD5E1;
+
+  /* ─── Text (4 tiers) ─── */
+  --text:   #020617;
+  --text-2: #334155;
+  --text-3: #64748B;
+  --text-4: #94A3B8;
+
+  /* ─── Brand (Authority Navy) ─── */
+  --brand:    #0F172A;
+  --brand-2:  #1E293B;
+  --brand-fg: #FFFFFF;
+
+  /* ─── Accent (Trust Blue) ─── */
+  --accent:    #0369A1;
+  --accent-2:  #0284C7;
+  --accent-bg: #E0F2FE;
+  --accent-fg: #FFFFFF;
+
+  /* ─── Status (semantic) ─── */
+  --success:    #16A34A;
+  --success-bg: #DCFCE7;
+  --warning:    #A16207;
+  --warning-bg: #FEF3C7;
+  --danger:     #DC2626;
+  --danger-bg:  #FEE2E2;
+  --info:       #0284C7;
+  --info-bg:    #E0F2FE;
+  --neutral:    #64748B;
+  --neutral-bg: #F1F5F9;
+
+  /* ─── Elevation ─── */
+  --shadow-card:  0 1px 3px rgba(15,23,42,0.05), 0 1px 2px rgba(15,23,42,0.03);
+  --shadow-lift:  0 4px 12px rgba(15,23,42,0.08);
+  --shadow-modal: 0 20px 40px rgba(15,23,42,0.15);
+  --shadow-focus: 0 0 0 3px rgba(3,105,161,0.15);
+
+  /* ─── Radius ─── */
+  --radius-sm: 6px;
+  --radius:    8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-pill: 999px;
+
+  /* ─── Motion ─── */
+  --ease:      cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-out:  cubic-bezier(0, 0, 0.2, 1);
+  --dur-fast:  150ms;
+  --dur:       200ms;
+  --dur-slow:  300ms;
+
+  /* ─── Layout ─── */
+  --topbar-h: 60px;
+  --sidebar-w: 240px;
+  --sidebar-w-collapsed: 64px;
+  --container-max: 1440px;
+
+  /* ─── Stepper (workflow tracking) ─── */
+  --step-done: var(--success);
+  --step-done-bg: var(--success-bg);
+  --step-done-line: #86EFAC;
+  --step-active: var(--accent);
+  --step-active-bg: var(--accent-bg);
+  --step-active-line: #7DD3FC;
+  --step-pending: var(--text-4);
+  --step-pending-bg: var(--surface-2);
+
+  /* ─── Legacy bridge for ClientOrderDetails ─── */
+  --ob-tx: var(--text);
+  --ob-txm: var(--text-2);
+  --ob-txd: var(--text-3);
+  --ob-txdd: var(--text-4);
+  --ob-bg: var(--bg);
+  --ob-surf: var(--surface);
+  --ob-surf2: var(--surface-2);
+  --ob-surf3: var(--surface-3);
+  --ob-brd: var(--border);
+  --ob-brd2: var(--border-2);
+  --ob-p: var(--accent);
+  --ob-p2: var(--accent-2);
+  --ob-pl: var(--accent-bg);
+  --ob-tl: var(--success);
+  --ob-tll: var(--success-bg);
+  --ob-grn: var(--success);
+  --ob-grnl: var(--success-bg);
+  --ob-or: var(--warning);
+  --ob-orl: var(--warning-bg);
+  --ob-red: var(--danger);
+  --ob-redl: var(--danger-bg);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Keyframes
+   ═══════════════════════════════════════════════════════════════ */
+@keyframes shimmer-slide {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+@keyframes glow-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(3, 105, 161, 0.35); }
+  50%      { box-shadow: 0 0 0 6px rgba(3, 105, 161, 0); }
+}
+
+.dark @keyframes glow-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(56, 189, 248, 0.45); }
+  50%      { box-shadow: 0 0 0 6px rgba(56, 189, 248, 0); }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Dark mode
+   ═══════════════════════════════════════════════════════════════ */
+.dark {
+  --bg:        #020617;
+  --surface:   #0F172A;
+  --surface-2: #1E293B;
+  --surface-3: #334155;
+  --border:    #1E293B;
+  --border-2:  #334155;
+
+  --text:   #F8FAFC;
+  --text-2: #CBD5E1;
+  --text-3: #94A3B8;
+  --text-4: #64748B;
+
+  --brand:    #F8FAFC;
+  --brand-2:  #E2E8F0;
+  --brand-fg: #0F172A;
+
+  --accent:    #38BDF8;
+  --accent-2:  #0EA5E9;
+  --accent-bg: rgba(56, 189, 248, 0.12);
+
+  --success:    #4ADE80;
+  --success-bg: rgba(74, 222, 128, 0.12);
+  --warning:    #FACC15;
+  --warning-bg: rgba(250, 204, 21, 0.12);
+  --danger:     #F87171;
+  --danger-bg:  rgba(248, 113, 113, 0.12);
+  --info:       #38BDF8;
+  --info-bg:    rgba(56, 189, 248, 0.12);
+  --neutral:    #94A3B8;
+  --neutral-bg: #1E293B;
+
+  --shadow-card:  0 1px 3px rgba(0,0,0,0.3), 0 1px 2px rgba(0,0,0,0.2);
+  --shadow-lift:  0 4px 12px rgba(0,0,0,0.4);
+  --shadow-modal: 0 20px 40px rgba(0,0,0,0.5);
+  --shadow-focus: 0 0 0 3px rgba(56,189,248,0.25);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   shadcn variable bridge — map shadcn vars to our tokens
+   ═══════════════════════════════════════════════════════════════ */
+:root, .dark {
+  --background: var(--bg);
+  --foreground: var(--text);
+  --card: var(--surface);
+  --card-foreground: var(--text);
+  --popover: var(--surface);
+  --popover-foreground: var(--text);
+  --primary: var(--brand);
+  --primary-foreground: var(--brand-fg);
+  --secondary: var(--surface-2);
+  --secondary-foreground: var(--text);
+  --muted: var(--surface-2);
+  --muted-foreground: var(--text-3);
+  --accent-foreground: var(--accent-fg);
+  --destructive: var(--danger);
+  --input: var(--border);
+  --ring: var(--accent);
+  --sidebar: var(--surface);
+  --sidebar-foreground: var(--text);
+  --sidebar-primary: var(--brand);
+  --sidebar-primary-foreground: var(--brand-fg);
+  --sidebar-accent: var(--surface-2);
+  --sidebar-accent-foreground: var(--text);
+  --sidebar-border: var(--border);
+  --sidebar-ring: var(--accent);
+}

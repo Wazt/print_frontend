@@ -7,7 +7,6 @@ import AXIOS_CONFIG from "@/config/axiosConfig";
 export const getRawMaterials = async () => {
   try {
     const response = await AXIOS_CONFIG.get("materials/");
-    console.log(response)
     return response.data;
   } catch (error) {
     console.error("Failed to fetch raw materials:", error);
@@ -35,7 +34,6 @@ export const getRawMaterialById = async (id) => {
 export const createRawMaterial = async (data) => {
   try {
     const response = await AXIOS_CONFIG.post("materials/", data);
-    console.log(response)
     return response.data;
   } catch (error) {
     console.error("Failed to create raw material:", error);

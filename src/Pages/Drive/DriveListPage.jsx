@@ -1,29 +1,27 @@
-import { Button } from "@/Components/ui/button";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/Components/ui/card";
-import { Input } from "@/Components/ui/input";
-import { Skeleton } from "@/Components/ui/skeleton";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/Components/ui/table";
-import { Badge } from "@/Components/ui/badge";
-import { FolderPlus, RefreshCw, Search, FolderOpen, Users } from "lucide-react";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { getDriveFolders } from '@/Services/DriveService';  // You'll create this
+import { FolderOpen, RefreshCw, ExternalLink, Folder, ArrowRight } from "lucide-react";
+import { getDriveFolders } from "@/Services/DriveService";
+import { useLanguage } from "@/contexts/LanguageContext";
+import {
+  PageHeader, StatCard, DataCard, EmptyState, Toolbar, Button,
+} from "@/Components/primitives";
 
-function DriveListPage() {
+export default function DriveListPage() {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [folders, setFolders] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
 
   const fetchFolders = async () => {
-    setIsLoading(true);
     setIsRefreshing(true);
     try {
-      const data = await getDriveFolders();  // Returns array of { id, name, webViewLink, createdTime }
-      setFolders(data || []);
-    } catch (error) {
-      console.error("Failed to fetch folders:", error);
+      const data = await getDriveFolders();
+      setFolders(Array.isArray(data) ? data : []);
+    } catch {
+      setFolders([]);
     } finally {
       setIsLoading(false);
       setIsRefreshing(false);
@@ -34,160 +32,127 @@ function DriveListPage() {
     fetchFolders();
   }, []);
 
-  const filteredFolders = folders.filter(folder =>
-    folder.name?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  // Simple stats (you can enhance with real data later)
-  const stats = [
-    { title: "Total Clients", value: folders.length, icon: Users },
-    { title: "Active Folders", value: folders.length, icon: FolderOpen },
-    { title: "Storage Used", value: "Calculating...", icon: FolderPlus }, // Future: per-folder size
-  ];
+  const filtered = useMemo(() => {
+    if (!searchTerm) return folders;
+    const q = searchTerm.toLowerCase();
+    return folders.filter((f) => f.name?.toLowerCase().includes(q));
+  }, [folders, searchTerm]);
 
   return (
-    <div className="p-6 space-y-6">
-      <Card className="border-0 shadow-sm">
-        <CardHeader>
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div>
-              <CardTitle className="text-2xl font-semibold tracking-tight">
-                Client Drive Folders
-              </CardTitle>
-              <CardDescription className="text-muted-foreground">
-                Manage and view all client folders stored on Google Drive
-              </CardDescription>
-            </div>
-            <div className="flex flex-col sm:flex-row gap-3">
-              <Button
-                variant="outline"
-                className="gap-2"
-                onClick={fetchFolders}
-                disabled={isRefreshing}
-              >
-                <RefreshCw size={16} className={isRefreshing ? "animate-spin" : ""} />
-                Refresh
-              </Button>
-              <Button
-                onClick={() => console.log("Manual folder creation")} // Future feature
-                className="gap-2"
-                variant="default"
-              >
-                <FolderPlus size={16} />
-                New Client Folder
-              </Button>
-            </div>
-          </div>
-        </CardHeader>
+    <div className="space-y-6">
+      <PageHeader
+        title={t("nav.documents")}
+        subtitle={
+          t("lang") === "fr"
+            ? "Dossiers clients sur Google Drive"
+            : "Client folders on Google Drive"
+        }
+        icon={FolderOpen}
+      />
 
-        <CardContent className="space-y-6">
-          {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {stats.map((stat, index) => (
-              <Card key={index} className="border-0 shadow-none bg-muted/50">
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <stat.icon className="h-8 w-8 text-primary" />
-                      <div>
-                        <p className="text-sm font-medium text-muted-foreground">{stat.title}</p>
-                        <h3 className="text-2xl font-bold mt-1">
-                          {isLoading ? '--' : stat.value}
-                        </h3>
-                      </div>
-                    </div>
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+        <StatCard
+          label={t("lang") === "fr" ? "Total dossiers" : "Total folders"}
+          value={folders.length}
+          icon={Folder}
+          tone="accent"
+          loading={isLoading}
+        />
+        <StatCard
+          label={t("lang") === "fr" ? "Dossiers actifs" : "Active folders"}
+          value={folders.length}
+          icon={FolderOpen}
+          loading={isLoading}
+        />
+        <StatCard
+          label={t("lang") === "fr" ? "Stockage" : "Storage"}
+          value="—"
+          loading={isLoading}
+        />
+      </div>
+
+      <Toolbar
+        search={searchTerm}
+        onSearchChange={setSearchTerm}
+        searchPlaceholder={
+          t("lang") === "fr" ? "Rechercher un dossier..." : "Search folders..."
+        }
+        actions={
+          <Button variant="outline" size="md" onClick={fetchFolders} disabled={isRefreshing}>
+            <RefreshCw size={14} className={isRefreshing ? "animate-spin" : ""} />
+            {t("lang") === "fr" ? "Actualiser" : "Refresh"}
+          </Button>
+        }
+      />
+
+      {isLoading ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {[...Array(6)].map((_, i) => (
+            <div
+              key={i}
+              className="h-28 bg-[var(--surface-2)] rounded-[var(--radius-lg)] animate-pulse"
+            />
+          ))}
+        </div>
+      ) : filtered.length === 0 ? (
+        <DataCard>
+          <EmptyState
+            icon={Folder}
+            title={t("lang") === "fr" ? "Aucun dossier" : "No folders"}
+            description={
+              t("lang") === "fr"
+                ? "Les dossiers clients apparaitront ici."
+                : "Client folders will appear here."
+            }
+          />
+        </DataCard>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {filtered.map((folder) => (
+            <article
+              key={folder.id}
+              className="relative p-5 bg-[var(--surface)] border border-[var(--border)] rounded-[var(--radius-lg)] hover:border-[var(--border-2)] hover:shadow-[var(--shadow-lift)] hover:-translate-y-px transition-all"
+            >
+              <button
+                type="button"
+                onClick={() => navigate(`/drive/${folder.id}`)}
+                className="text-left w-full focus-visible:outline-none focus-visible:shadow-[var(--shadow-focus)] rounded-[var(--radius)]"
+                aria-label={
+                  t("lang") === "fr"
+                    ? `Ouvrir le dossier ${folder.name}`
+                    : `Open folder ${folder.name}`
+                }
+              >
+                <div className="flex items-start justify-between mb-3">
+                  <div className="w-10 h-10 rounded-[var(--radius)] bg-[var(--accent-bg)] flex items-center justify-center text-[var(--accent)]">
+                    <FolderOpen size={18} aria-hidden="true" />
                   </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-
-          {/* Search */}
-          <div className="flex flex-col sm:flex-row justify-between gap-4">
-            <div className="relative max-w-md w-full">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search client folders..."
-                className="pl-9"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
-          </div>
-
-          {/* Folders Table */}
-          <Card className="overflow-hidden border">
-            {isLoading ? (
-              <div className="p-6 space-y-4">
-                {[...Array(6)].map((_, i) => (
-                  <Skeleton key={i} className="h-12 w-full rounded-lg" />
-                ))}
-              </div>
-            ) : (
-              <>
-                <div className="p-4 border-b flex items-center justify-between">
-                  <h3 className="font-medium">All Client Folders</h3>
-                  <p className="text-sm text-muted-foreground">
-                    {filteredFolders.length} {filteredFolders.length === 1 ? 'folder' : 'folders'} found
-                  </p>
+                  <ArrowRight size={15} className="text-[var(--text-3)]" aria-hidden="true" />
                 </div>
-                <Table>
-                  <TableHeader className="bg-muted/50">
-                    <TableRow>
-                      <TableHead>Folder Name</TableHead>
-                      <TableHead>Created Date</TableHead>
-                      <TableHead>Files Count</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredFolders.length > 0 ? (
-                      filteredFolders.map((folder) => (
-                        <TableRow key={folder.id} className="hover:bg-muted/50">
-                          <TableCell className="font-medium flex items-center gap-2">
-                            <FolderOpen className="h-4 w-4 text-primary" />
-                            {folder.name}
-                          </TableCell>
-                          <TableCell>
-                            {folder.createdTime ? new Date(folder.createdTime).toLocaleDateString() : '—'}
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant="secondary">—</Badge> {/* Future: file count */}
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => navigate(`/drive/${folder.id}`)} // Future detail page
-                            >
-                              Open
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => window.open(folder.webViewLink, '_blank')}
-                            >
-                              View in Drive
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      ))
-                    ) : (
-                      <TableRow>
-                        <TableCell colSpan={4} className="h-24 text-center">
-                          {searchTerm ? "No matching folders found" : "No client folders yet"}
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
-              </>
-            )}
-          </Card>
-        </CardContent>
-      </Card>
+                <div className="text-[15px] font-semibold text-[var(--text)] truncate">
+                  {folder.name}
+                </div>
+                <div className="text-[12px] text-[var(--text-3)] mt-1">
+                  {folder.createdTime
+                    ? new Date(folder.createdTime).toLocaleDateString()
+                    : "—"}
+                </div>
+              </button>
+              {folder.webViewLink && (
+                <a
+                  href={folder.webViewLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-3 pt-3 border-t border-[var(--border)] text-[11px] text-[var(--accent)] flex items-center gap-1 hover:underline focus-visible:outline-none focus-visible:shadow-[var(--shadow-focus)] rounded-[var(--radius-sm)]"
+                >
+                  <ExternalLink size={11} aria-hidden="true" />
+                  {t("lang") === "fr" ? "Ouvrir dans Drive" : "Open in Drive"}
+                </a>
+              )}
+            </article>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
-
-export default DriveListPage;

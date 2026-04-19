@@ -22,13 +22,11 @@ export const AuthProvider = ({ children }) => {
       password: e.target.password.value,
     })
       .then((response) => {
-        console.log(response)
         setIsLoading(false);
         setIsAuthenticated(true);
         navigate("/");
       })
       .catch((error) => {
-        console.log(error);
         setIsAuthenticated(false);
         setIsLoading(false);
         if (error.response?.status === 401 || error.response?.status === 400) {
@@ -46,16 +44,14 @@ export const AuthProvider = ({ children }) => {
     try {
       const response = await AXIOS_CONFIG.get("auth/me");
       if (response.status === 200) {
-        console.log(response.data)
         setProfile(response.data);
         setIsAuthenticated(true);
       } else {
         setProfile(null)
         setIsAuthenticated(false);
       }
-    } catch (error) {
+    } catch {
       setIsAuthenticated(false);
-      console.error("Token verification failed:", error);
     }
   };
 

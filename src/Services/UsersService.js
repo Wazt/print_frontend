@@ -3,7 +3,6 @@ import AXIOS_CONFIG from "@/config/axiosConfig";
 const getUsers = async () => {
   try {
     const response = await AXIOS_CONFIG.get("auth/users");
-    console.log(response);
     return response.data;
   } catch (error) {
     console.error("Error fetching users:", error);
@@ -16,8 +15,7 @@ export default getUsers;
 export const createUser = (user_data) => {
   return AXIOS_CONFIG.post("auth/register_user/", user_data)
     .then((response) => {
-      console.log("User created:", response);
-      return response.data; // ← usually good to return the created data
+      return response.data;
     })
     .catch((error) => {
       console.error("Error creating user:", error);
@@ -28,8 +26,7 @@ export const createUser = (user_data) => {
 export const getUserDetails = async (id) => {
   try {
     const response = await AXIOS_CONFIG.get(`auth/users/${id}`);
-    console.log("User details:", response);
-    return response.data; // ← most likely you want .data
+    return response.data;
   } catch (error) {
     console.error(`Error fetching user ${id}:`, error);
     throw error;
@@ -42,8 +39,6 @@ export const getUserDetails = async (id) => {
 export const updateUser = async (userId, data) => {
   try {
     const response = await AXIOS_CONFIG.patch(`auth/users/${userId}/`, data);
-    console.log(data)
-    console.log(`User ${userId} updated:`, response);
     return response.data;
   } catch (error) {
     console.error(`Error updating user ${userId}:`, error);

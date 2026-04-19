@@ -1,209 +1,119 @@
-import { useState } from "react";
+import { lazy, Suspense } from "react";
 import { Route, Routes } from "react-router-dom";
 import Layout from "./Layout";
-import Home from "./Pages/Home";
-import Commandes from "./Pages/Commandes";
-import CreateOrderPage from "./Pages/CreateOrderPage";
-import LoginPage from "./Pages/LoginPage";
 import { AuthProvider } from "./contexts/AuthContext";
+import { OrdersProvider } from "./contexts/OrdersContext";
 import { Toaster } from "sonner";
 import PrivateRoute from "./PrivateRoute";
-import OrderDetails from "./Pages/OrderDetails";
-import CompaniesPage from "./Pages/CRM/CompaniesPage";
-import CreateCompany from "./Pages/CRM/CreateCompany";
-import UsersPageList from "./Pages/Users/UsersPageList";
-import CompanyDetailPage from "./Pages/CRM/CompanyDetailPage";
-import CreateUserPage from "./Pages/Users/CreateUserPage";
-import EditUserPage from "./Pages/Users/EditUserPage";
-import UserDetailPage from "./Pages/Users/UserDetailPage";
-import DriveListPage from "./Pages/Drive/DriveListPage";
-import DriveFolderDetailPage from "./Pages/Drive/DriveFolderDetail";
-import ProductsPage from "./Pages/Products/productPage";
-import RawMaterialsPage from "./Pages/Stock/stockPage";
-import RawMaterialDetailPage from "./Pages/Stock/rawMaterialDetailPage";
-import RawMaterialCreatePage from "./Pages/Stock/rawMaterialCreatePage";
-import ProductDetailPage from "./Pages/Products/productDetailPage";
-import ProductCreatePage from "./Pages/Products/productCreatePage";
-import PaymentPage from "./Pages/Finance/PaymentPage";
+import ErrorBoundary from "./Components/ErrorBoundary";
+
+// Eagerly loaded (critical path)
+import LoginPage from "./Pages/LoginPage";
+import Home from "./Pages/Home";
+
+// Lazy loaded (code-split)
+const Commandes = lazy(() => import("./Pages/Commandes"));
+const CreateOrderPage = lazy(() => import("./Pages/CreateOrderPage"));
+const OrderDetails = lazy(() => import("./Pages/OrderDetails"));
+const CompaniesPage = lazy(() => import("./Pages/CRM/CompaniesPage"));
+const CreateCompany = lazy(() => import("./Pages/CRM/CreateCompany"));
+const CompanyDetailPage = lazy(() => import("./Pages/CRM/CompanyDetailPage"));
+const PaymentPage = lazy(() => import("./Pages/Finance/PaymentPage"));
+const UsersPageList = lazy(() => import("./Pages/Users/UsersPageList"));
+const CreateUserPage = lazy(() => import("./Pages/Users/CreateUserPage"));
+const EditUserPage = lazy(() => import("./Pages/Users/EditUserPage"));
+const UserDetailPage = lazy(() => import("./Pages/Users/UserDetailPage"));
+const DriveListPage = lazy(() => import("./Pages/Drive/DriveListPage"));
+const DriveFolderDetailPage = lazy(() => import("./Pages/Drive/DriveFolderDetail"));
+const ProductsPage = lazy(() => import("./Pages/Products/productPage"));
+const ProductDetailPage = lazy(() => import("./Pages/Products/productDetailPage"));
+const ProductCreatePage = lazy(() => import("./Pages/Products/productCreatePage"));
+const RawMaterialsPage = lazy(() => import("./Pages/Stock/stockPage"));
+const RawMaterialDetailPage = lazy(() => import("./Pages/Stock/rawMaterialDetailPage"));
+const RawMaterialCreatePage = lazy(() => import("./Pages/Stock/rawMaterialCreatePage"));
+const DesignSystem = lazy(() => import("./Pages/DesignSystem"));
+
+// Prototype — public signup + auth flows (mock data, no backend)
+const SignupPage = lazy(() => import("./Pages/Auth/SignupPage"));
+const VerifyPinPage = lazy(() => import("./Pages/Auth/VerifyPinPage"));
+const SetPasswordPage = lazy(() => import("./Pages/Auth/SetPasswordPage"));
+const ForgotPasswordPage = lazy(() => import("./Pages/Auth/ForgotPasswordPage"));
+const ResetPasswordPage = lazy(() => import("./Pages/Auth/ResetPasswordPage"));
+
+// Prototype — Contacts, Network, Admin
+const ContactsPage = lazy(() => import("./Pages/Contacts/ContactsPage"));
+const ContactDetailPage = lazy(() => import("./Pages/Contacts/ContactDetailPage"));
+const ContactFormPage = lazy(() => import("./Pages/Contacts/ContactFormPage"));
+const NetworkPage = lazy(() => import("./Pages/Network/NetworkPage"));
+const DuplicateAlertsPage = lazy(() => import("./Pages/Admin/DuplicateAlertsPage"));
+
+function PageLoader() {
+  return (
+    <div className="flex items-center justify-center min-h-[40vh]">
+      <div className="animate-spin rounded-full h-8 w-8 border-2 border-[var(--ob-p)] border-t-transparent" />
+    </div>
+  );
+}
 
 function App() {
   return (
     <AuthProvider>
-      <Routes>
-        <Route path="/auth/login" element={<LoginPage />} />
-        <Route
-          path="/"
-          element={
-            <PrivateRoute>
-              <Layout />
-            </PrivateRoute>
-          }
-        >
-          <Route
-            path="/"
-            element={
-              <PrivateRoute>
-                <Home />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/Commandes"
-            element={
-              <PrivateRoute>
-                <Commandes />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/Commandes/creer"
-            element={
-              <PrivateRoute>
-                <CreateOrderPage />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/Commandes/OrderDetails/:id"
-            element={
-              <PrivateRoute>
-                <OrderDetails />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/companies"
-            element={
-              <PrivateRoute>
-                <CompaniesPage />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/companies/create"
-            element={
-              <PrivateRoute>
-                <CreateCompany />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/companies/companyDetails/:id"
-            element={
-              <PrivateRoute>
-                <CompanyDetailPage />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/payment"
-            element={
-              <PrivateRoute>
-                <PaymentPage />
-              </PrivateRoute>
-            }
-          />
+      <OrdersProvider>
+        <ErrorBoundary>
+          <Suspense fallback={<PageLoader />}>
+          <Routes>
+            <Route path="/auth/login" element={<LoginPage />} />
+            <Route path="/design-system" element={<DesignSystem />} />
 
-          <Route
-            path="/users"
-            element={
-              <PrivateRoute>
-                <UsersPageList />
-              </PrivateRoute>
-            }
-          />
+            {/* Prototype — public signup + auth flows */}
+            <Route path="/signup" element={<SignupPage />} />
+            <Route path="/signup/verify" element={<VerifyPinPage />} />
+            <Route path="/auth/set-password" element={<SetPasswordPage />} />
+            <Route path="/auth/forgot-password" element={<ForgotPasswordPage />} />
+            <Route path="/auth/reset-password" element={<ResetPasswordPage />} />
+            <Route
+              path="/"
+              element={
+                <PrivateRoute>
+                  <Layout />
+                </PrivateRoute>
+              }
+            >
+              <Route path="/" element={<PrivateRoute><Home /></PrivateRoute>} />
+              <Route path="/Commandes" element={<PrivateRoute><Commandes /></PrivateRoute>} />
+              <Route path="/Commandes/creer" element={<PrivateRoute><CreateOrderPage /></PrivateRoute>} />
+              <Route path="/Commandes/OrderDetails/:id" element={<PrivateRoute><OrderDetails /></PrivateRoute>} />
+              <Route path="/companies" element={<PrivateRoute><CompaniesPage /></PrivateRoute>} />
+              <Route path="/companies/create" element={<PrivateRoute><CreateCompany /></PrivateRoute>} />
+              <Route path="/companies/companyDetails/:id" element={<PrivateRoute><CompanyDetailPage /></PrivateRoute>} />
+              <Route path="/payment" element={<PrivateRoute><PaymentPage /></PrivateRoute>} />
+              <Route path="/users" element={<PrivateRoute><UsersPageList /></PrivateRoute>} />
+              <Route path="/users/create" element={<PrivateRoute><CreateUserPage /></PrivateRoute>} />
+              <Route path="/users/:id" element={<PrivateRoute><UserDetailPage /></PrivateRoute>} />
+              <Route path="/users/edit/:id" element={<PrivateRoute><EditUserPage /></PrivateRoute>} />
+              <Route path="/drive" element={<PrivateRoute><DriveListPage /></PrivateRoute>} />
+              <Route path="/drive/:folderId" element={<PrivateRoute><DriveFolderDetailPage /></PrivateRoute>} />
+              <Route path="/products" element={<PrivateRoute><ProductsPage /></PrivateRoute>} />
+              <Route path="/products/:id" element={<PrivateRoute><ProductDetailPage /></PrivateRoute>} />
+              <Route path="/products/new" element={<PrivateRoute><ProductCreatePage /></PrivateRoute>} />
+              <Route path="/stock" element={<PrivateRoute><RawMaterialsPage /></PrivateRoute>} />
+              <Route path="/stock/:id" element={<PrivateRoute><RawMaterialDetailPage /></PrivateRoute>} />
+              <Route path="/stock/create" element={<PrivateRoute><RawMaterialCreatePage /></PrivateRoute>} />
 
-          <Route
-            path="/users/create"
-            element={
-              <PrivateRoute>
-                <CreateUserPage />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/users/:id"
-            element={
-              <PrivateRoute>
-                <UserDetailPage />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/users/edit/:id"
-            element={
-              <PrivateRoute>
-                <EditUserPage />
-              </PrivateRoute>
-            }
-          />
+              {/* Prototype — Contacts */}
+              <Route path="/contacts" element={<PrivateRoute><ContactsPage /></PrivateRoute>} />
+              <Route path="/contacts/new" element={<PrivateRoute><ContactFormPage /></PrivateRoute>} />
+              <Route path="/contacts/:id" element={<PrivateRoute><ContactDetailPage /></PrivateRoute>} />
+              <Route path="/contacts/:id/edit" element={<PrivateRoute><ContactFormPage /></PrivateRoute>} />
 
-          <Route
-            path="/drive"
-            element={
-              <PrivateRoute>
-                <DriveListPage />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/drive/:folderId"
-            element={
-              <PrivateRoute>
-                <DriveFolderDetailPage />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/products"
-            element={
-              <PrivateRoute>
-                <ProductsPage />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/products/:id"
-            element={
-              <PrivateRoute>
-                <ProductDetailPage />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/products/new"
-            element={
-              <PrivateRoute>
-                <ProductCreatePage />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/stock"
-            element={
-              <PrivateRoute>
-                <RawMaterialsPage />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/stock/:id"
-            element={
-              <PrivateRoute>
-                <RawMaterialDetailPage />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/stock/create"
-            element={
-              <PrivateRoute>
-                <RawMaterialCreatePage />
-              </PrivateRoute>
-            }
-          />
-        </Route>
-      </Routes>
+              {/* Prototype — Network + Admin */}
+              <Route path="/network" element={<PrivateRoute><NetworkPage /></PrivateRoute>} />
+              <Route path="/admin/duplicate-alerts" element={<PrivateRoute><DuplicateAlertsPage /></PrivateRoute>} />
+            </Route>
+          </Routes>
+          </Suspense>
+        </ErrorBoundary>
+      </OrdersProvider>
       <Toaster />
     </AuthProvider>
   );
