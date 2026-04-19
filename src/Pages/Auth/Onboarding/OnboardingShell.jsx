@@ -31,9 +31,37 @@ export default function OnboardingShell({
   const label = continueLabel || (isFr ? "Continuer" : "Continue");
 
   return (
-    <div className="min-h-screen bg-[var(--bg)] flex flex-col">
+    <div className="min-h-screen bg-[var(--bg)] flex flex-col relative overflow-hidden">
+      {/* Decorative background — print machinery, gradient-masked into bg */}
+      <div
+        className="absolute inset-0 pointer-events-none z-0"
+        aria-hidden="true"
+      >
+        {/* Bottom-right print machine image */}
+        <div
+          className="absolute bottom-0 right-0 w-[65%] max-w-[900px] aspect-video opacity-[0.18]"
+          style={{
+            backgroundImage: "url('/brand/steps-bg.jpg')",
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+            maskImage:
+              "linear-gradient(to top left, rgba(0,0,0,1) 0%, rgba(0,0,0,0.6) 35%, rgba(0,0,0,0) 75%)",
+            WebkitMaskImage:
+              "linear-gradient(to top left, rgba(0,0,0,1) 0%, rgba(0,0,0,0.6) 35%, rgba(0,0,0,0) 75%)",
+          }}
+        />
+        {/* Top-left subtle accent glow for balance */}
+        <div
+          className="absolute -top-32 -left-32 w-[500px] h-[500px] rounded-full opacity-40"
+          style={{
+            background:
+              "radial-gradient(circle, color-mix(in srgb, var(--accent) 15%, transparent) 0%, transparent 70%)",
+          }}
+        />
+      </div>
+
       {/* Top progress bar */}
-      <div className="relative w-full">
+      <div className="relative z-10 w-full">
         <div className="h-1 bg-[var(--surface-2)]">
           <div
             className="h-full transition-all duration-[var(--dur-slow)] ease-out"
@@ -55,13 +83,13 @@ export default function OnboardingShell({
       </div>
 
       {/* Step body (centered column) */}
-      <div className="flex-1 flex items-center justify-center px-6 py-12">
+      <div className="relative z-10 flex-1 flex items-center justify-center px-6 py-12">
         <div className="w-full max-w-[680px]">{children}</div>
       </div>
 
       {/* Bottom nav — back + continue */}
       {(onBack || onContinue) && (
-        <div className="w-full pb-8 px-6">
+        <div className="relative z-10 w-full pb-8 px-6">
           <div className="max-w-[680px] mx-auto flex items-center justify-center gap-4">
             {onBack && (
               <button
@@ -99,7 +127,7 @@ export default function OnboardingShell({
       )}
 
       {/* Brand logo bottom-left */}
-      <div className="absolute bottom-6 left-6 flex items-center gap-2 opacity-70">
+      <div className="absolute z-10 bottom-6 left-6 flex items-center gap-2 opacity-70">
         <div className="w-7 h-7 rounded-[var(--radius-sm)] bg-[var(--brand)] flex items-center justify-center">
           <Printer size={14} className="text-[var(--brand-fg)]" aria-hidden="true" />
         </div>
