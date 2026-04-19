@@ -39,7 +39,7 @@ export default function OnboardingShell({
       >
         {/* Bottom-right print machine image */}
         <div
-          className="absolute bottom-0 right-0 w-[65%] max-w-[900px] aspect-video opacity-[0.18]"
+          className="absolute bottom-0 right-0 w-[65%] max-w-[900px] aspect-video opacity-30"
           style={{
             backgroundImage: "url('/brand/steps-bg.jpg')",
             backgroundSize: "cover",
